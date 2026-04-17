@@ -107,7 +107,7 @@ export const PORTFOLIO_DATA = {
       accentColor: '#00d4ff',
       tags: 'React, Vite, Framer Motion, Tailwind',
       githubUrl: 'https://github.com/Muhib-2/muhib-portfolio',
-      liveUrl: 'https://muhib-portfolio.vercel.app',
+      liveUrl: 'https://muhib-portfolio-five.vercel.app',
       emoji: '🚀',
       images: ['muhib-portfolio.png', 'proex.png', 'crafthub.png'],
       isFeatured: true,
