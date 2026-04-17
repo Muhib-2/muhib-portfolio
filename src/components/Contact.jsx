@@ -4,10 +4,10 @@ import { useRef, useState } from 'react';
 import {
   HiEnvelope, HiPhone, HiMapPin, HiPaperAirplane, HiCheckCircle,
 } from 'react-icons/hi2';
-import { FaGithub, FaLinkedinIn, FaFacebookF, FaInstagram } from 'react-icons/fa';
+import { FaGithub, FaLinkedinIn, FaFacebookF, FaInstagram, FaWhatsapp } from 'react-icons/fa';
 import { PORTFOLIO_DATA } from '../context/PortfolioContext';
 
-const iconMap = { FaGithub, FaLinkedinIn, FaFacebookF, FaInstagram };
+const iconMap = { FaGithub, FaLinkedinIn, FaFacebookF, FaInstagram, FaWhatsapp };
 
 export default function Contact() {
   const ref = useRef(null);
@@ -29,10 +29,31 @@ export default function Contact() {
   const handleSubmit = async (e) => {
     e.preventDefault();
     setLoading(true);
-    await new Promise((res) => setTimeout(res, 1200));
-    setLoading(false);
-    setSubmitted(true);
-    setFormData({ name: '', email: '', subject: '', message: '' });
+    try {
+      const response = await fetch('https://api.web3forms.com/submit', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', Accept: 'application/json' },
+        body: JSON.stringify({
+          access_key: '19cf4002-4951-4f54-99f1-4d1e927da89f',
+          name: formData.name,
+          email: formData.email,
+          subject: `Portfolio Contact: ${formData.subject}`,
+          message: formData.message,
+          from_name: 'Muhib Portfolio',
+        }),
+      });
+      const result = await response.json();
+      if (result.success) {
+        setSubmitted(true);
+        setFormData({ name: '', email: '', subject: '', message: '' });
+      } else {
+        alert('Something went wrong. Please try again or contact me directly via email.');
+      }
+    } catch {
+      alert('Network error. Please check your connection and try again.');
+    } finally {
+      setLoading(false);
+    }
   };
 
   return (

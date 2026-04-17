@@ -1,8 +1,8 @@
-import { FaGithub, FaLinkedinIn, FaFacebookF, FaInstagram } from 'react-icons/fa';
+import { FaGithub, FaLinkedinIn, FaFacebookF, FaInstagram, FaWhatsapp } from 'react-icons/fa';
 import { Link } from 'react-scroll';
 import { PORTFOLIO_DATA } from '../context/PortfolioContext';
 
-const iconMap = { FaGithub, FaLinkedinIn, FaFacebookF, FaInstagram };
+const iconMap = { FaGithub, FaLinkedinIn, FaFacebookF, FaInstagram, FaWhatsapp };
 
 const navLinks = [
   { label: 'Home',     to: 'home'     },

@@ -6,13 +6,13 @@ import {
 } from 'react-icons/fa';
 import {
   SiNextdotjs, SiTypescript, SiJavascript, SiTailwindcss, SiFramer,
-  SiDjango, SiPostman, SiPostgresql,
+  SiDjango, SiPostman, SiPostgresql, SiVercel,
 } from 'react-icons/si';
 
 const iconMap = {
   FaReact, FaHtml5, FaCss3Alt, FaPython, FaNodeJs, FaGithub, FaFigma, FaCode,
   SiNextdotjs, SiTypescript, SiJavascript, SiTailwindcss, SiFramer,
-  SiDjango, SiPostman, SiPostgresql,
+  SiDjango, SiPostman, SiPostgresql, SiVercel,
   SiVisualstudiocode: FaCode,
 };
 

@@ -5,6 +5,40 @@ import { FaGithub } from 'react-icons/fa';
 import { HiArrowTopRightOnSquare } from 'react-icons/hi2';
 import { PORTFOLIO_DATA } from '../context/PortfolioContext';
 
+function ProjectTag({ tag, accentColor }) {
+  const [isHovered, setIsHovered] = useState(false);
+  return (
+    <span
+      onMouseEnter={() => setIsHovered(true)}
+      onMouseLeave={() => setIsHovered(false)}
+      className="flex items-center gap-1.5 text-xs px-3 py-1.5 rounded-lg border border-white/[0.08] bg-white/[0.05] text-slate-400
+        hover:-translate-y-0.5 transition-all duration-300 cursor-default"
+      style={{
+        borderColor: isHovered ? `${accentColor}40` : '',
+        color: isHovered ? accentColor : '',
+        backgroundColor: isHovered ? `${accentColor}15` : '',
+      }}
+    >
+      <div className="w-1.5 h-1.5 rounded-full shadow-sm" style={{ backgroundColor: accentColor, boxShadow: isHovered ? `0 0 8px ${accentColor}` : '' }} />
+      {tag}
+    </span>
+  );
+}
+
+function ProjectTitle({ title, accentColor }) {
+  const [isHovered, setIsHovered] = useState(false);
+  return (
+    <h3
+      onMouseEnter={() => setIsHovered(true)}
+      onMouseLeave={() => setIsHovered(false)}
+      className="text-lg font-bold font-display text-white mb-2 transition-colors duration-300 line-clamp-1 w-fit cursor-default"
+      style={{ color: isHovered ? accentColor : '#ffffff' }}
+    >
+      {title}
+    </h3>
+  );
+}
+
 function ProjectCard({ project, index }) {
   const [hovered, setHovered] = useState(false);
 
@@ -88,32 +122,16 @@ function ProjectCard({ project, index }) {
 
       {/* Content */}
       <div className="p-6 flex flex-col flex-1">
-        <h3 className="text-lg font-bold font-display text-white mb-2 group-hover:text-[#00d4ff] transition-colors line-clamp-1">
-          {project.title}
-        </h3>
-        <p className="text-sm text-slate-400 leading-relaxed mb-6 flex-grow">
+        <ProjectTitle title={project.title} accentColor={project.accentColor} />
+        <p className="text-sm text-slate-400 leading-relaxed mb-6 flex-grow mt-1">
           {project.description}
         </p>
 
         {/* Tags */}
-        <div className="flex flex-wrap gap-2 mt-auto">
+        <div className="flex flex-wrap gap-2 mt-auto relative z-10 pointer-events-auto">
           {project.tags.split(',').map((tag_item) => {
             const tag = tag_item.trim();
-            return (
-              <span
-                key={tag}
-                className="flex items-center gap-1.5 text-xs px-3 py-1.5 rounded-lg border border-white/[0.08] bg-white/[0.05] text-slate-400
-                  hover:-translate-y-0.5 transition-all duration-300 cursor-default"
-                style={{
-                  border: hovered ? `1px solid ${project.accentColor}40` : '',
-                  color: hovered ? project.accentColor : '',
-                  backgroundColor: hovered ? `${project.accentColor}15` : '',
-                }}
-              >
-                <div className="w-1.5 h-1.5 rounded-full" style={{ backgroundColor: project.accentColor }} />
-                {tag}
-              </span>
-            );
+            return <ProjectTag key={tag} tag={tag} accentColor={project.accentColor} />;
           })}
         </div>
       </div>

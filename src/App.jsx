@@ -5,6 +5,7 @@ import Skills from './components/Skills';
 import Projects from './components/Projects';
 import Contact from './components/Contact';
 import Footer from './components/Footer';
+import { Analytics } from '@vercel/analytics/react';
 
 const SectionDivider = () => (
   <div className="w-full h-px bg-gradient-to-r from-transparent via-[#00d4ff]/20 to-transparent" />
@@ -26,6 +27,7 @@ export default function App() {
         <Contact />
       </main>
       <Footer />
+      <Analytics />
     </div>
   );
 }

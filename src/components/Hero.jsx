@@ -1,8 +1,9 @@
 import { motion } from 'framer-motion';
 import { Link } from 'react-scroll';
 import { TypeAnimation } from 'react-type-animation';
+import { useEffect, useState } from 'react';
 import { HiArrowDownTray, HiEnvelope } from 'react-icons/hi2';
-import { FaGithub, FaLinkedinIn, FaFacebookF, FaInstagram } from 'react-icons/fa';
+import { FaGithub, FaLinkedinIn, FaFacebookF, FaInstagram, FaWhatsapp } from 'react-icons/fa';
 import muhibImg from '../assets/muhib.png';
 import { PORTFOLIO_DATA } from '../context/PortfolioContext';
 
@@ -21,18 +22,55 @@ const iconMap = {
   FaLinkedinIn,
   FaFacebookF,
   FaInstagram,
+  FaWhatsapp,
 };
-
-const stats = [
-  { value: `${PORTFOLIO_DATA.about.yearsOfExperience}+`, label: 'Years Experience' },
-  { value: `${PORTFOLIO_DATA.about.projectsDone}+`,      label: 'Projects Completed' },
-  { value: '5+',                                          label: 'Technologies' },
-  { value: '100%',                                        label: 'Dedication' },
-];
 
 const typingSequence = PORTFOLIO_DATA.typingPhrases.flatMap(p => [p, 2000]);
 
+// Counter namespace — unique to this portfolio
+const COUNTER_NS = 'muhib-nabil-portfolio';
+const COUNTER_KEY = 'visitors';
+
+function useVisitorCount() {
+  const [count, setCount] = useState(null);
+
+  useEffect(() => {
+    // Only count once per browser session so page refreshes don't spam the counter
+    const alreadyCounted = sessionStorage.getItem('visit_counted');
+
+    const fetchAndIncrement = async () => {
+      try {
+        const endpoint = alreadyCounted
+          ? `https://api.counterapi.dev/v1/${COUNTER_NS}/${COUNTER_KEY}`
+          : `https://api.counterapi.dev/v1/${COUNTER_NS}/${COUNTER_KEY}/up`;
+
+        const res = await fetch(endpoint);
+        const data = await res.json();
+        setCount(data.count ?? data.value ?? null);
+
+        if (!alreadyCounted) sessionStorage.setItem('visit_counted', 'true');
+      } catch {
+        // Silently fail — don't break the page if the counter API is down
+      }
+    };
+
+    fetchAndIncrement();
+  }, []);
+
+  return count;
+}
+
 export default function Hero() {
+  const visitorCount = useVisitorCount();
+
+  const stats = [
+    { value: `${PORTFOLIO_DATA.about.yearsOfExperience}+`, label: 'Years Experience' },
+    { value: `${PORTFOLIO_DATA.about.projectsDone}+`,      label: 'Projects Completed' },
+    { value: '5+',                                          label: 'Technologies' },
+    { value: '100%',                                        label: 'Dedication' },
+    { value: visitorCount !== null ? visitorCount.toLocaleString() : '...', label: '👁️ Portfolio Views' },
+  ];
+
   return (
     <section
       id="home"
@@ -215,28 +253,57 @@ export default function Hero() {
 
         {/* Stats Bar */}
         <motion.div
-          className="mt-16 md:mt-20"
+          className="mt-4 md:mt-5"
           initial={{ opacity: 0, y: 40 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.8, duration: 0.6 }}
         >
-          <div className="glass-card rounded-2xl overflow-hidden">
-            <div className="grid grid-cols-2 lg:grid-cols-4 divide-x divide-y lg:divide-y-0 divide-white/[0.06]">
-              {stats.map(({ value, label }, i) => (
-                <motion.div
-                  key={label}
-                  className="flex flex-col items-center justify-center py-6 px-4 gap-1
-                    hover:bg-white/[0.03] transition-colors duration-300"
-                  initial={{ opacity: 0 }}
-                  animate={{ opacity: 1 }}
-                  transition={{ delay: 1 + i * 0.1 }}
-                >
-                  <span className="text-3xl md:text-4xl font-bold font-display text-gradient">
-                    {value}
-                  </span>
-                  <span className="text-xs md:text-sm text-slate-400 text-center">{label}</span>
-                </motion.div>
-              ))}
+          {/* ── Premium Spinning Laser Border Stats Bar ── */}
+          <div className="relative rounded-2xl p-[2px]" style={{ isolation: 'isolate' }}>
+
+            {/* Layer 1: ambient blurred glow behind card */}
+            <motion.div
+              className="absolute inset-0 rounded-2xl opacity-60"
+              style={{
+                background: 'conic-gradient(from 0deg, #00d4ff, #7c3aed, #00d4ff, transparent, transparent)',
+                filter: 'blur(14px)',
+              }}
+              animate={{ rotate: [0, 360] }}
+              transition={{ duration: 6, repeat: Infinity, ease: 'linear' }}
+            />
+
+            {/* Layer 2: sharp spinning laser border */}
+            <motion.div
+              className="absolute inset-0 rounded-2xl"
+              style={{
+                background: 'conic-gradient(from 0deg, transparent 0deg, #00d4ff 40deg, #7c3aed 80deg, transparent 120deg)',
+              }}
+              animate={{ rotate: [0, 360] }}
+              transition={{ duration: 4, repeat: Infinity, ease: 'linear' }}
+            />
+
+            {/* Card content — dark fill sits on top, leaving only the 2px laser border visible */}
+            <div
+              className="relative rounded-[14px] overflow-hidden backdrop-blur-sm"
+              style={{ background: '#0d1117', zIndex: 1 }}
+            >
+              <div className="grid grid-cols-2 lg:grid-cols-5 divide-x divide-y lg:divide-y-0 divide-white/[0.06]">
+                {stats.map(({ value, label }, i) => (
+                  <motion.div
+                    key={label}
+                    className="flex flex-col items-center justify-center py-6 px-4 gap-1
+                      hover:bg-white/[0.03] transition-colors duration-300"
+                    initial={{ opacity: 0 }}
+                    animate={{ opacity: 1 }}
+                    transition={{ delay: 1 + i * 0.1 }}
+                  >
+                    <span className="text-3xl md:text-4xl font-bold font-display text-gradient">
+                      {value}
+                    </span>
+                    <span className="text-xs md:text-sm text-slate-400 text-center">{label}</span>
+                  </motion.div>
+                ))}
+              </div>
             </div>
           </div>
         </motion.div>
