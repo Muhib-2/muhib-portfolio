@@ -1,9 +1,87 @@
-import { motion } from 'framer-motion';
+import { motion, AnimatePresence } from 'framer-motion';
 import { useInView } from 'framer-motion';
-import { useRef, useState } from 'react';
+import { useRef, useState, useEffect } from 'react';
 import { FaGithub } from 'react-icons/fa';
 import { HiArrowTopRightOnSquare } from 'react-icons/hi2';
 import { PORTFOLIO_DATA } from '../context/PortfolioContext';
+
+// Import project images
+import muhibPortfolioImg from '../assets/projects/muhib-portfolio.png';
+import proexImg from '../assets/projects/proex.png';
+import crafthubImg from '../assets/projects/crafthub.png';
+
+const projectImages = {
+  'muhib-portfolio.png': muhibPortfolioImg,
+  'proex.png': proexImg,
+  'crafthub.png': crafthubImg,
+};
+
+function ProjectSlideshow({ images, title, hovered }) {
+  const [currentIndex, setCurrentIndex] = useState(0);
+
+  useEffect(() => {
+    const timer = setInterval(() => {
+      setCurrentIndex((prev) => (prev + 1) % images.length);
+    }, 5000); // 5 seconds rotation
+
+    return () => clearInterval(timer);
+  }, [images.length]);
+
+  return (
+    <div className="relative w-full h-full overflow-hidden">
+      <AnimatePresence mode="wait">
+        <motion.img
+          key={currentIndex}
+          src={projectImages[images[currentIndex]]}
+          alt={`${title} - slide ${currentIndex + 1}`}
+          className="absolute inset-0 w-full h-full object-cover object-top"
+          initial={{ opacity: 0, scale: 1.1 }}
+          animate={{ 
+            opacity: 1, 
+            scale: hovered ? 1.05 : 1,
+            filter: hovered ? 'brightness(1.1) contrast(1.1)' : 'brightness(0.9) contrast(1)'
+          }}
+          exit={{ opacity: 0, scale: 0.95 }}
+          transition={{ duration: 0.6, ease: "easeInOut" }}
+        />
+      </AnimatePresence>
+      
+      {/* Tech Scanning Overlay */}
+      <motion.div 
+        className="absolute inset-x-0 h-[2px] bg-gradient-to-r from-transparent via-cyan-400 to-transparent opacity-50 z-10"
+        animate={{ 
+          top: ["-10%", "110%"],
+        }}
+        transition={{ 
+          duration: 3, 
+          repeat: Infinity, 
+          ease: "linear" 
+        }}
+      />
+
+      {/* Slide Indicators */}
+      <div className="absolute bottom-3 left-1/2 -translate-x-1/2 flex gap-1.5 z-20">
+        {images.map((_, i) => (
+          <div 
+            key={i}
+            className={`w-1.5 h-1.5 rounded-full transition-all duration-300 ${
+              i === currentIndex ? 'bg-cyan-400 w-4' : 'bg-white/20'
+            }`}
+          />
+        ))}
+      </div>
+
+      {/* Corner Markers */}
+      <div className="absolute top-2 left-2 w-2 h-2 border-l border-t border-cyan-400/50 z-20" />
+      <div className="absolute top-2 right-2 w-2 h-2 border-r border-t border-cyan-400/50 z-20" />
+      <div className="absolute bottom-2 left-2 w-2 h-2 border-l border-b border-cyan-400/50 z-20" />
+      <div className="absolute bottom-2 right-2 w-2 h-2 border-r border-b border-cyan-400/50 z-20" />
+
+      {/* Digital Grid Overlay */}
+      <div className="absolute inset-0 bg-grid-white/[0.03] pointer-events-none" />
+    </div>
+  );
+}
 
 function ProjectTag({ tag, accentColor }) {
   const [isHovered, setIsHovered] = useState(false);
@@ -41,6 +119,7 @@ function ProjectTitle({ title, accentColor }) {
 
 function ProjectCard({ project, index }) {
   const [hovered, setHovered] = useState(false);
+  const imageSrc = project.image ? projectImages[project.image] : null;
 
   return (
     <motion.div
@@ -54,23 +133,63 @@ function ProjectCard({ project, index }) {
       id={`project-card-${project.id}`}
     >
       {/* Project visual */}
-      <div className="relative h-48 sm:h-52 overflow-hidden shrink-0">
-        <>
-          <div
-            className="absolute inset-0 opacity-20"
-            style={{ background: `linear-gradient(135deg, ${project.gradientStart}, ${project.gradientEnd})` }}
-          />
-          <div className="absolute inset-0 dot-grid opacity-30" />
-          <div className="absolute inset-0 flex items-center justify-center">
-            <span className="text-7xl opacity-40 group-hover:scale-110 transition-transform duration-500">
-              {project.emoji}
-            </span>
+      <div className="relative h-48 sm:h-52 overflow-hidden shrink-0 bg-slate-900">
+        {project.images ? (
+          <ProjectSlideshow images={project.images} title={project.title} hovered={hovered} />
+        ) : imageSrc ? (
+          <div className="relative w-full h-full overflow-hidden">
+            {/* Project Image */}
+            <motion.img
+              src={imageSrc}
+              alt={project.title}
+              className="w-full h-full object-cover object-top"
+              animate={{ 
+                scale: hovered ? 1.05 : 1,
+                filter: hovered ? 'brightness(1.1) contrast(1.1)' : 'brightness(0.9) contrast(1)'
+              }}
+              transition={{ duration: 0.6, ease: "easeOut" }}
+            />
+            
+            {/* Tech Scanning Overlay */}
+            <motion.div 
+              className="absolute inset-x-0 h-[2px] bg-gradient-to-r from-transparent via-cyan-400 to-transparent opacity-50 z-10"
+              animate={{ 
+                top: ["-10%", "110%"],
+              }}
+              transition={{ 
+                duration: 3, 
+                repeat: Infinity, 
+                ease: "linear" 
+              }}
+            />
+
+            {/* Corner Markers */}
+            <div className="absolute top-2 left-2 w-2 h-2 border-l border-t border-cyan-400/50 z-20" />
+            <div className="absolute top-2 right-2 w-2 h-2 border-r border-t border-cyan-400/50 z-20" />
+            <div className="absolute bottom-2 left-2 w-2 h-2 border-l border-b border-cyan-400/50 z-20" />
+            <div className="absolute bottom-2 right-2 w-2 h-2 border-r border-b border-cyan-400/50 z-20" />
+
+            {/* Digital Grid Overlay */}
+            <div className="absolute inset-0 bg-grid-white/[0.03] pointer-events-none" />
           </div>
-        </>
+        ) : (
+          <>
+            <div
+              className="absolute inset-0 opacity-20"
+              style={{ background: `linear-gradient(135deg, ${project.gradientStart}, ${project.gradientEnd})` }}
+            />
+            <div className="absolute inset-0 dot-grid opacity-30" />
+            <div className="absolute inset-0 flex items-center justify-center">
+              <span className="text-7xl opacity-40 group-hover:scale-110 transition-transform duration-500">
+                {project.emoji || '🚀'}
+              </span>
+            </div>
+          </>
+        )}
 
         {/* Hover overlay */}
         <motion.div
-          className="absolute inset-0 flex items-center justify-center gap-4"
+          className="absolute inset-0 flex items-center justify-center gap-4 z-30"
           initial={{ opacity: 0 }}
           animate={{ opacity: hovered ? 1 : 0 }}
           transition={{ duration: 0.2 }}
@@ -105,7 +224,7 @@ function ProjectCard({ project, index }) {
 
         {/* Featured badge */}
         {project.isFeatured && (
-          <div className="absolute top-3 right-3">
+          <div className="absolute top-3 right-3 z-30">
             <span
               className="text-xs font-semibold px-3 py-1 rounded-full"
               style={{

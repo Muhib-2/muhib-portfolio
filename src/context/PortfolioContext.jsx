@@ -109,6 +109,7 @@ export const PORTFOLIO_DATA = {
       githubUrl: 'https://github.com/Muhib-2/muhib-portfolio',
       liveUrl: 'https://muhib-portfolio.vercel.app',
       emoji: '🚀',
+      images: ['muhib-portfolio.png', 'proex.png', 'crafthub.png'],
       isFeatured: true,
     },
     {

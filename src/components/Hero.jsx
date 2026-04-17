@@ -253,54 +253,68 @@ export default function Hero() {
 
         {/* Stats Bar */}
         <motion.div
-          className="mt-4 md:mt-5"
+          className="mt-4 md:mt-5 relative w-full"
           initial={{ opacity: 0, y: 40 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.8, duration: 0.6 }}
         >
-          {/* ── Premium Spinning Laser Border Stats Bar ── */}
-          <div className="relative rounded-2xl p-[2px]" style={{ isolation: 'isolate' }}>
-
-            {/* Layer 1: ambient blurred glow behind card */}
-            <motion.div
-              className="absolute inset-0 rounded-2xl opacity-60"
+          {/* Cyberpunk / High-Tech HUD Container */}
+          <div className="relative rounded-2xl bg-[#09090b] border border-white/5 overflow-hidden group shadow-[0_0_30px_rgba(0,0,0,0.5)]">
+            
+            {/* Tech Grid Background Animation */}
+            <div 
+              className="absolute inset-0 opacity-[0.03] group-hover:opacity-[0.06] transition-opacity duration-700"
               style={{
-                background: 'conic-gradient(from 0deg, #00d4ff, #7c3aed, #00d4ff, transparent, transparent)',
-                filter: 'blur(14px)',
+                backgroundImage: 'linear-gradient(#00d4ff 1px, transparent 1px), linear-gradient(90deg, #00d4ff 1px, transparent 1px)',
+                backgroundSize: '32px 32px',
+                backgroundPosition: 'center center'
               }}
-              animate={{ rotate: [0, 360] }}
-              transition={{ duration: 6, repeat: Infinity, ease: 'linear' }}
             />
 
-            {/* Layer 2: sharp spinning laser border */}
+            {/* Animated Data Streams (Vertical & Horizontal scanning lines) */}
             <motion.div
-              className="absolute inset-0 rounded-2xl"
-              style={{
-                background: 'conic-gradient(from 0deg, transparent 0deg, #00d4ff 40deg, #7c3aed 80deg, transparent 120deg)',
-              }}
-              animate={{ rotate: [0, 360] }}
-              transition={{ duration: 4, repeat: Infinity, ease: 'linear' }}
+              className="absolute w-full h-[1px] shadow-[0_0_15px_#00d4ff]"
+              style={{ background: 'linear-gradient(90deg, transparent, #00d4ff, transparent)' }}
+              animate={{ top: ['-10%', '110%'] }}
+              transition={{ duration: 3, repeat: Infinity, ease: 'linear' }}
+            />
+            <motion.div
+              className="absolute h-full w-[1px] shadow-[0_0_15px_#7c3aed]"
+              style={{ background: 'linear-gradient(180deg, transparent, #7c3aed, transparent)' }}
+              animate={{ left: ['-10%', '110%'] }}
+              transition={{ duration: 4, repeat: Infinity, ease: 'linear', delay: 1.5 }}
             />
 
-            {/* Card content — dark fill sits on top, leaving only the 2px laser border visible */}
-            <div
-              className="relative rounded-[14px] overflow-hidden backdrop-blur-sm"
-              style={{ background: '#0d1117', zIndex: 1 }}
-            >
-              <div className="grid grid-cols-2 lg:grid-cols-5 divide-x divide-y lg:divide-y-0 divide-white/[0.06]">
+            {/* Corner HUD Markers */}
+            <div className="absolute top-0 left-0 w-4 h-4 border-t-2 border-l-2 border-[#00d4ff] rounded-tl-xl opacity-70" />
+            <div className="absolute top-0 right-0 w-4 h-4 border-t-2 border-r-2 border-[#7c3aed] rounded-tr-xl opacity-70" />
+            <div className="absolute bottom-0 left-0 w-4 h-4 border-b-2 border-l-2 border-[#7c3aed] rounded-bl-xl opacity-70" />
+            <div className="absolute bottom-0 right-0 w-4 h-4 border-b-2 border-r-2 border-[#00d4ff] rounded-br-xl opacity-70" />
+
+            {/* Content Container */}
+            <div className="relative z-10 w-full backdrop-blur-sm">
+              <div className="grid grid-cols-2 lg:grid-cols-5 divide-x divide-y lg:divide-y-0 divide-[#00d4ff]/10">
                 {stats.map(({ value, label }, i) => (
                   <motion.div
                     key={label}
-                    className="flex flex-col items-center justify-center py-6 px-4 gap-1
-                      hover:bg-white/[0.03] transition-colors duration-300"
+                    className="flex flex-col items-center justify-center py-6 px-4 gap-1.5
+                      hover:bg-[#00d4ff]/[0.02] transition-colors duration-300 relative group/stat"
                     initial={{ opacity: 0 }}
                     animate={{ opacity: 1 }}
                     transition={{ delay: 1 + i * 0.1 }}
                   >
-                    <span className="text-3xl md:text-4xl font-bold font-display text-gradient">
+                    {/* Hover tech overlay on individual stat */}
+                    <div className="absolute inset-0 opacity-0 group-hover/stat:opacity-100 transition-opacity duration-300 pointer-events-none flex items-center justify-between p-2">
+                       <div className="w-1.5 h-1.5 bg-[#00d4ff]/40 rounded-sm" />
+                       <div className="w-1.5 h-1.5 bg-[#7c3aed]/40 rounded-sm" />
+                    </div>
+
+                    <span className="text-3xl md:text-4xl font-bold font-display text-gradient drop-shadow-[0_0_12px_rgba(0,212,255,0.2)]">
                       {value}
                     </span>
-                    <span className="text-xs md:text-sm text-slate-400 text-center">{label}</span>
+                    <span className="text-[11px] md:text-xs text-slate-400 text-center font-semibold tracking-wider uppercase">
+                      {label}
+                    </span>
                   </motion.div>
                 ))}
               </div>
