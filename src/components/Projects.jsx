@@ -179,9 +179,12 @@ function ProjectCard({ project, index }) {
               style={{ background: `linear-gradient(135deg, ${project.gradientStart}, ${project.gradientEnd})` }}
             />
             <div className="absolute inset-0 dot-grid opacity-30" />
-            <div className="absolute inset-0 flex items-center justify-center">
-              <span className="text-7xl opacity-40 group-hover:scale-110 transition-transform duration-500">
+            <div className="absolute inset-0 flex flex-col items-center justify-center p-6 text-center">
+              <span className="text-6xl mb-4 opacity-30 group-hover:scale-110 transition-transform duration-500">
                 {project.emoji || '🚀'}
+              </span>
+              <span className="text-xl font-bold font-display text-white/40 tracking-wider uppercase group-hover:text-white/60 transition-colors duration-500">
+                {project.title}
               </span>
             </div>
           </>
