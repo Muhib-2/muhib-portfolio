@@ -150,7 +150,7 @@ export default function ProjectsManager() {
 
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div>
-              <label className="block text-sm font-medium text-slate-300 mb-2">Live URL</label>
+              <label className="block text-sm font-medium text-slate-300 mb-2">Live/Official URL</label>
               <input
                 type="url"
                 value={formData.liveUrl}
@@ -161,7 +161,7 @@ export default function ProjectsManager() {
             </div>
 
             <div>
-              <label className="block text-sm font-medium text-slate-300 mb-2">GitHub URL</label>
+              <label className="block text-sm font-medium text-slate-300 mb-2">GitHub Source Code</label>
               <input
                 type="url"
                 value={formData.githubUrl}

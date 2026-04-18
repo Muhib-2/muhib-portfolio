@@ -3,18 +3,24 @@ import { motion } from 'framer-motion';
 import { 
   HiUser, HiAcademicCap, HiCodeBracket, HiBriefcase, 
   HiRectangleStack, HiEnvelope, HiArrowRightOnRectangle,
-  HiChartBar, HiBars3, HiXMark, HiChevronLeft, HiChevronRight
+  HiChartBar, HiBars3, HiXMark, HiChevronLeft, HiChevronRight,
+  HiHome, HiUserCircle, HiCpuChip
 } from 'react-icons/hi2';
+import { Link } from 'react-router-dom';
 import AboutManager from './sections/AboutManager';
 import EducationManager from './sections/EducationManager';
 import SkillsManager from './sections/SkillsManager';
 import ExperienceManager from './sections/ExperienceManager';
 import ProjectsManager from './sections/ProjectsManager';
 import ContactManager from './sections/ContactManager';
+import ProfileManager from './sections/ProfileManager';
+import TechStackManager from './sections/TechStackManager';
 
 const menuItems = [
   { id: 'overview', label: 'Overview', icon: HiChartBar },
+  { id: 'profile', label: 'Profile', icon: HiUserCircle },
   { id: 'about', label: 'About', icon: HiUser },
+  { id: 'techstack', label: 'Tech Stack', icon: HiCpuChip },
   { id: 'education', label: 'Education', icon: HiAcademicCap },
   { id: 'skills', label: 'Skills', icon: HiCodeBracket },
   { id: 'experience', label: 'Experience', icon: HiBriefcase },
@@ -29,13 +35,15 @@ export default function Dashboard({ onLogout }) {
 
   const renderSection = () => {
     switch (activeSection) {
+      case 'profile': return <ProfileManager />;
       case 'about': return <AboutManager />;
+      case 'techstack': return <TechStackManager />;
       case 'education': return <EducationManager />;
       case 'skills': return <SkillsManager />;
       case 'experience': return <ExperienceManager />;
       case 'projects': return <ProjectsManager />;
       case 'contact': return <ContactManager />;
-      default: return <Overview />;
+      default: return <Overview setActiveSection={setActiveSection} />;
     }
   };
 
@@ -72,13 +80,29 @@ export default function Dashboard({ onLogout }) {
               {sidebarCollapsed ? 'Admin' : 'Admin Dashboard'}
             </h1>
           </div>
-          <button
-            onClick={onLogout}
-            className="btn-outline text-sm py-2 px-3 lg:px-4"
-          >
-            <HiArrowRightOnRectangle className="w-4 h-4" />
-            <span className="hidden sm:inline ml-2">Logout</span>
-          </button>
+          
+          {/* Header Actions */}
+          <div className="flex items-center gap-2">
+            {/* Go Home Button */}
+            <Link
+              to="/"
+              className="p-2 sm:px-4 sm:py-2 rounded-xl glass-card text-slate-400 hover:text-[#00d4ff] hover:border-[#00d4ff]/30 hover:shadow-[0_0_15px_rgba(0,212,255,0.2)] transition-all duration-300 flex items-center gap-2"
+              title="Go to Homepage"
+            >
+              <HiHome className="w-4 h-4" />
+              <span className="hidden sm:inline text-sm font-medium">Home</span>
+            </Link>
+            
+            {/* Logout Button */}
+            <button
+              onClick={onLogout}
+              className="p-2 sm:px-4 sm:py-2 rounded-xl border border-[#00d4ff]/30 text-[#00d4ff] hover:bg-[#00d4ff]/10 hover:border-[#00d4ff] transition-all duration-300 flex items-center gap-2"
+              title="Logout"
+            >
+              <HiArrowRightOnRectangle className="w-4 h-4" />
+              <span className="hidden sm:inline text-sm font-medium">Logout</span>
+            </button>
+          </div>
         </div>
       </header>
 
@@ -120,13 +144,32 @@ export default function Dashboard({ onLogout }) {
                 
                 {/* Tooltip for collapsed state */}
                 {sidebarCollapsed && (
-                  <div className="absolute left-full ml-2 px-2 py-1 bg-[#111118] text-xs text-slate-200 rounded-lg opacity-0 group-hover:opacity-100 transition-opacity duration-200 pointer-events-none whitespace-nowrap z-50">
+                  <div className="absolute left-full ml-2 px-2 py-1 bg-[#111118] text-xs text-slate-200 rounded-lg opacity-0 group-hover:opacity-100 transition-opacity duration-200 pointer-events-none whitespace-nowrap z-50 border border-white/10">
                     {label}
                   </div>
                 )}
               </button>
             ))}
           </nav>
+          
+          {/* Mobile Footer Actions */}
+          <div className="lg:hidden absolute bottom-4 left-4 right-4 space-y-2 border-t border-white/10 pt-4">
+            <Link
+              to="/"
+              className="w-full flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-medium text-slate-400 hover:text-slate-200 hover:bg-white/[0.04] transition-all duration-300"
+              onClick={() => setSidebarOpen(false)}
+            >
+              <HiHome className="w-5 h-5 flex-shrink-0" />
+              <span className="truncate">Go Home</span>
+            </Link>
+            <button
+              onClick={onLogout}
+              className="w-full flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-medium text-slate-400 hover:text-red-400 hover:bg-red-500/10 transition-all duration-300"
+            >
+              <HiArrowRightOnRectangle className="w-5 h-5 flex-shrink-0" />
+              <span className="truncate">Logout</span>
+            </button>
+          </div>
         </aside>
 
         {/* Main Content */}
@@ -147,7 +190,7 @@ export default function Dashboard({ onLogout }) {
   );
 }
 
-function Overview() {
+function Overview({ setActiveSection }) {
   const stats = [
     { label: 'Total Projects', value: '10+', icon: HiRectangleStack, color: 'from-[#00d4ff] to-[#0080a8]' },
     { label: 'Skills', value: '15+', icon: HiCodeBracket, color: 'from-[#7c3aed] to-[#4d1a9b]' },
@@ -176,18 +219,34 @@ function Overview() {
 
       <div className="glass-card p-4 lg:p-6 rounded-2xl">
         <h3 className="text-lg lg:text-xl font-bold font-display mb-4">Quick Actions</h3>
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 lg:gap-4">
-          <button className="btn-primary justify-center text-sm lg:text-base py-3">
-            <HiUser className="w-4 h-4" />
-            Update About
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 lg:gap-4">
+          <button 
+            onClick={() => setActiveSection('profile')}
+            className="btn-primary justify-center text-sm lg:text-base py-3"
+          >
+            <HiUserCircle className="w-4 h-4" />
+            Update Profile
           </button>
-          <button className="btn-outline justify-center text-sm lg:text-base py-3">
+          <button 
+            onClick={() => setActiveSection('techstack')}
+            className="btn-outline justify-center text-sm lg:text-base py-3"
+          >
+            <HiCpuChip className="w-4 h-4" />
+            Manage Tech Stack
+          </button>
+          <button 
+            onClick={() => setActiveSection('projects')}
+            className="btn-outline justify-center text-sm lg:text-base py-3"
+          >
             <HiRectangleStack className="w-4 h-4" />
             Add Project
           </button>
-          <button className="btn-outline justify-center text-sm lg:text-base py-3 sm:col-span-2 lg:col-span-1">
-            <HiCodeBracket className="w-4 h-4" />
-            Add Skill
+          <button 
+            onClick={() => setActiveSection('about')}
+            className="btn-outline justify-center text-sm lg:text-base py-3"
+          >
+            <HiUser className="w-4 h-4" />
+            Update About
           </button>
         </div>
       </div>
