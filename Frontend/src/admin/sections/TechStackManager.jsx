@@ -1,12 +1,14 @@
 import { useState, useEffect } from 'react';
 import { HiPlus, HiPencil, HiTrash, HiCheck, HiXMark } from 'react-icons/hi2';
-import { portfolioAPI } from '../../services/api';
+import { portfolioAPI, uploadAPI } from '../../services/api';
+import Modal from '../../components/Modal';
+import FileUpload from '../../components/FileUpload';
 
 export default function TechStackManager() {
   const [techStack, setTechStack] = useState([]);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
-  const [isAdding, setIsAdding] = useState(false);
+  const [showModal, setShowModal] = useState(false);
   const [editingId, setEditingId] = useState(null);
   
   const [techForm, setTechForm] = useState({
@@ -14,6 +16,8 @@ export default function TechStackManager() {
     icon: '',
     category: 'Frontend'
   });
+
+  const [uploadedIcon, setUploadedIcon] = useState(null);
 
   useEffect(() => {
     fetchTechStack();
@@ -46,15 +50,36 @@ export default function TechStackManager() {
     }
   };
 
-  const handleAddTech = async () => {
-    const newTech = {
-      _id: Date.now().toString(),
-      ...techForm
-    };
-    const updatedTechStack = [...techStack, newTech];
-    await saveTechStack(updatedTechStack);
+  const handleIconUpload = async (fileData) => {
+    if (!fileData) {
+      setUploadedIcon(null);
+      setTechForm({ ...techForm, icon: '' });
+      return;
+    }
+
+    try {
+      const response = await uploadAPI.uploadFile(fileData.file, 'icon');
+      setUploadedIcon(response.data);
+      setTechForm({ ...techForm, icon: response.data.url });
+    } catch (error) {
+      console.error('Error uploading icon:', error);
+      alert('Failed to upload icon: ' + error.message);
+    }
+  };
+
+  const getImageUrl = (iconPath) => {
+    if (!iconPath) return null;
+    if (iconPath.startsWith('/uploads')) {
+      return `${import.meta.env.VITE_API_URL || 'http://localhost:5000'}${iconPath}`;
+    }
+    return iconPath;
+  };
+
+  const openAddModal = () => {
+    setEditingId(null);
     setTechForm({ name: '', icon: '', category: 'Frontend' });
-    setIsAdding(false);
+    setUploadedIcon(null);
+    setShowModal(true);
   };
 
   const handleEditTech = (tech) => {
@@ -64,15 +89,39 @@ export default function TechStackManager() {
       icon: tech.icon,
       category: tech.category
     });
+    setUploadedIcon(null);
+    setShowModal(true);
+  };
+
+  const handleAddTech = async () => {
+    if (saving) return; // Prevent duplicate submissions
+    
+    try {
+      setSaving(true);
+      const newTech = {
+        ...techForm
+      };
+      const updatedTechStack = [...techStack, newTech];
+      await saveTechStack(updatedTechStack);
+      closeModal();
+    } catch (error) {
+      setSaving(false);
+    }
   };
 
   const handleUpdateTech = async () => {
-    const updatedTechStack = techStack.map(tech =>
-      tech._id === editingId ? { ...tech, ...techForm } : tech
-    );
-    await saveTechStack(updatedTechStack);
-    setEditingId(null);
-    setTechForm({ name: '', icon: '', category: 'Frontend' });
+    if (saving) return; // Prevent duplicate submissions
+    
+    try {
+      setSaving(true);
+      const updatedTechStack = techStack.map(tech =>
+        tech._id === editingId ? { ...tech, ...techForm } : tech
+      );
+      await saveTechStack(updatedTechStack);
+      closeModal();
+    } catch (error) {
+      setSaving(false);
+    }
   };
 
   const handleDeleteTech = async (techId) => {
@@ -82,10 +131,11 @@ export default function TechStackManager() {
     }
   };
 
-  const cancelForms = () => {
-    setIsAdding(false);
+  const closeModal = () => {
+    setShowModal(false);
     setEditingId(null);
     setTechForm({ name: '', icon: '', category: 'Frontend' });
+    setUploadedIcon(null);
   };
 
   if (loading) {
@@ -106,88 +156,111 @@ export default function TechStackManager() {
     <div className="max-w-7xl mx-auto">
       <div className="flex items-center justify-between mb-6">
         <h2 className="text-2xl font-bold font-display text-gradient">Tech Stack Management</h2>
-        {!isAdding && !editingId && (
-          <button onClick={() => setIsAdding(true)} className="btn-primary text-sm" disabled={saving}>
-            <HiPlus className="w-4 h-4" />
-            Add Technology
-          </button>
-        )}
+        <button onClick={openAddModal} className="btn-primary text-sm" disabled={saving}>
+          <HiPlus className="w-4 h-4" />
+          Add Technology
+        </button>
       </div>
 
-      {/* Add/Edit Form */}
-      {(isAdding || editingId) && (
-        <div className="glass-card p-6 rounded-2xl mb-6">
-          <h3 className="text-lg font-semibold text-slate-200 mb-4">
-            {isAdding ? 'Add New Technology' : 'Edit Technology'}
-          </h3>
-          
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-4">
-            <div>
-              <label className="block text-sm font-medium text-slate-300 mb-2">Technology Name</label>
-              <input
-                type="text"
-                value={techForm.name}
-                onChange={(e) => setTechForm({ ...techForm, name: e.target.value })}
-                className="form-input"
-                placeholder="e.g., React"
-              />
-            </div>
-            <div>
-              <label className="block text-sm font-medium text-slate-300 mb-2">Icon/Image URL</label>
-              <input
-                type="text"
-                value={techForm.icon}
-                onChange={(e) => setTechForm({ ...techForm, icon: e.target.value })}
-                className="form-input"
-                placeholder="/icons/react.png"
-              />
-            </div>
-            <div>
-              <label className="block text-sm font-medium text-slate-300 mb-2">Category</label>
-              <select
-                value={techForm.category}
-                onChange={(e) => setTechForm({ ...techForm, category: e.target.value })}
-                className="form-input"
-              >
-                {categories.map(cat => (
-                  <option key={cat} value={cat}>{cat}</option>
-                ))}
-              </select>
-            </div>
+      {/* Add/Edit Modal */}
+      <Modal
+        isOpen={showModal}
+        onClose={closeModal}
+        title={editingId ? 'Edit Technology' : 'Add New Technology'}
+        size="md"
+      >
+        <div className="space-y-4">
+          <div>
+            <label className="block text-sm font-medium text-slate-300 mb-2">Technology Name</label>
+            <input
+              type="text"
+              value={techForm.name}
+              onChange={(e) => setTechForm({ ...techForm, name: e.target.value })}
+              className="form-input"
+              placeholder="e.g., React"
+            />
           </div>
 
-          <div className="flex gap-2">
-            <button
-              onClick={isAdding ? handleAddTech : handleUpdateTech}
-              className="btn-primary text-sm"
-              disabled={saving}
-            >
-              {saving ? (
-                <>
-                  <div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />
-                  Saving...
-                </>
-              ) : (
-                <>
-                  <HiCheck className="w-4 h-4" />
-                  {isAdding ? 'Add Technology' : 'Update Technology'}
-                </>
-              )}
-            </button>
-            <button onClick={cancelForms} className="btn-outline text-sm" disabled={saving}>
-              <HiXMark className="w-4 h-4" />
-              Cancel
-            </button>
+          <div>
+            <FileUpload
+              label="Technology Icon"
+              accept="image/*"
+              value={getImageUrl(techForm.icon)}
+              onChange={handleIconUpload}
+              type="image"
+              placeholder="Upload technology icon (PNG, SVG, JPG)"
+            />
           </div>
+
+          <div>
+            <label className="block text-sm font-medium text-slate-300 mb-2">Category</label>
+            <select
+              value={techForm.category}
+              onChange={(e) => setTechForm({ ...techForm, category: e.target.value })}
+              className="form-input"
+            >
+              {categories.map(cat => (
+                <option key={cat} value={cat}>{cat}</option>
+              ))}
+            </select>
+          </div>
+
+          {/* Preview */}
+          {techForm.name && (
+            <div>
+              <label className="block text-sm font-medium text-slate-300 mb-2">Preview</label>
+              <div className="bg-white/[0.02] p-4 rounded-xl">
+                <div className="flex items-center gap-3">
+                  <div className="w-10 h-10 rounded-lg bg-white/[0.08] flex items-center justify-center flex-shrink-0">
+                    {techForm.icon ? (
+                      <img src={getImageUrl(techForm.icon)} alt={techForm.name} className="w-6 h-6 object-contain" />
+                    ) : (
+                      <span className="text-xs font-bold text-slate-400">
+                        {techForm.name.slice(0, 2).toUpperCase()}
+                      </span>
+                    )}
+                  </div>
+                  <div>
+                    <h4 className="font-semibold text-slate-200">{techForm.name}</h4>
+                    <p className="text-xs text-slate-500">{techForm.category}</p>
+                  </div>
+                </div>
+              </div>
+            </div>
+          )}
         </div>
-      )}
+
+        <div className="flex gap-3 justify-end mt-6">
+          <button onClick={closeModal} className="btn-outline text-sm" disabled={saving}>
+            <HiXMark className="w-4 h-4" />
+            Cancel
+          </button>
+          <button
+            onClick={editingId ? handleUpdateTech : handleAddTech}
+            className="btn-primary text-sm"
+            disabled={saving || !techForm.name.trim()}
+          >
+            {saving ? (
+              <>
+                <div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />
+                Saving...
+              </>
+            ) : (
+              <>
+                <HiCheck className="w-4 h-4" />
+                {editingId ? 'Update Technology' : 'Add Technology'}
+              </>
+            )}
+          </button>
+        </div>
+      </Modal>
 
       {/* Technologies by Category */}
       <div className="space-y-8">
         {categories.map((category) => {
           const categoryTech = groupedTech[category] || [];
           
-          if (categoryTech.length === 0) return null;
+          if (categoryTech.length === 0) return <div key={category} style={{ display: 'none' }} />;
 
           return (
             <div key={category} className="glass-card p-6 rounded-2xl">
@@ -200,7 +273,7 @@ export default function TechStackManager() {
                       <div className="flex items-center gap-3 flex-1 min-w-0">
                         <div className="w-10 h-10 rounded-lg bg-white/[0.08] flex items-center justify-center flex-shrink-0">
                           {tech.icon ? (
-                            <img src={tech.icon} alt={tech.name} className="w-6 h-6 object-contain" />
+                            <img src={getImageUrl(tech.icon)} alt={tech.name} className="w-6 h-6 object-contain" />
                           ) : (
                             <span className="text-xs font-bold text-slate-400">
                               {tech.name.slice(0, 2).toUpperCase()}

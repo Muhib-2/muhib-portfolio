@@ -1,12 +1,13 @@
 import { useState, useEffect } from 'react';
 import { HiPlus, HiPencil, HiTrash, HiCheck, HiXMark } from 'react-icons/hi2';
 import { portfolioAPI } from '../../services/api';
+import Modal from '../../components/Modal';
 
 export default function EducationManager() {
   const [education, setEducation] = useState([]);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
-  const [isAdding, setIsAdding] = useState(false);
+  const [showModal, setShowModal] = useState(false);
   const [editingId, setEditingId] = useState(null);
   const [formData, setFormData] = useState({
     degree: '',
@@ -46,18 +47,10 @@ export default function EducationManager() {
     }
   };
 
-  const handleAdd = async () => {
-    const newEducation = {
-      _id: Date.now().toString(),
-      institution: formData.institution,
-      degree: formData.degree,
-      field: formData.period,
-      description: formData.description,
-    };
-    const updatedEducation = [...education, newEducation];
-    await saveEducation(updatedEducation);
+  const openAddModal = () => {
+    setEditingId(null);
     setFormData({ degree: '', institution: '', period: '', description: '' });
-    setIsAdding(false);
+    setShowModal(true);
   };
 
   const handleEdit = (item) => {
@@ -68,21 +61,47 @@ export default function EducationManager() {
       period: item.field || '',
       description: item.description,
     });
+    setShowModal(true);
   };
 
-  const handleUpdate = async () => {
-    const updatedEducation = education.map(item => 
-      item._id === editingId ? { 
-        ...item, 
+  const handleAdd = async () => {
+    if (saving) return; // Prevent duplicate submissions
+    
+    try {
+      setSaving(true);
+      const newEducation = {
         institution: formData.institution,
         degree: formData.degree,
         field: formData.period,
         description: formData.description,
-      } : item
-    );
-    await saveEducation(updatedEducation);
-    setEditingId(null);
-    setFormData({ degree: '', institution: '', period: '', description: '' });
+      };
+      const updatedEducation = [...education, newEducation];
+      await saveEducation(updatedEducation);
+      closeModal();
+    } catch (error) {
+      setSaving(false);
+    }
+  };
+
+  const handleUpdate = async () => {
+    if (saving) return; // Prevent duplicate submissions
+    
+    try {
+      setSaving(true);
+      const updatedEducation = education.map(item => 
+        item._id === editingId ? { 
+          ...item, 
+          institution: formData.institution,
+          degree: formData.degree,
+          field: formData.period,
+          description: formData.description,
+        } : item
+      );
+      await saveEducation(updatedEducation);
+      closeModal();
+    } catch (error) {
+      setSaving(false);
+    }
   };
 
   const handleDelete = async (id) => {
@@ -92,8 +111,8 @@ export default function EducationManager() {
     }
   };
 
-  const handleCancel = () => {
-    setIsAdding(false);
+  const closeModal = () => {
+    setShowModal(false);
     setEditingId(null);
     setFormData({ degree: '', institution: '', period: '', description: '' });
   };
@@ -110,21 +129,20 @@ export default function EducationManager() {
     <div>
       <div className="flex items-center justify-between mb-6">
         <h2 className="text-2xl font-bold font-display text-gradient">Education</h2>
-        {!isAdding && !editingId && (
-          <button onClick={() => setIsAdding(true)} className="btn-primary text-sm" disabled={saving}>
-            <HiPlus className="w-4 h-4" />
-            Add Education
-          </button>
-        )}
+        <button onClick={openAddModal} className="btn-primary text-sm" disabled={saving}>
+          <HiPlus className="w-4 h-4" />
+          Add Education
+        </button>
       </div>
 
-      {/* Add/Edit Form */}
-      {(isAdding || editingId) && (
-        <div className="glass-card p-6 rounded-2xl mb-6 space-y-4">
-          <h3 className="text-lg font-semibold text-slate-200 mb-4">
-            {isAdding ? 'Add New Education' : 'Edit Education'}
-          </h3>
-          
+      {/* Modal */}
+      <Modal
+        isOpen={showModal}
+        onClose={closeModal}
+        title={editingId ? 'Edit Education' : 'Add New Education'}
+        size="md"
+      >
+        <div className="space-y-4">
           <div>
             <label className="block text-sm font-medium text-slate-300 mb-2">Degree</label>
             <input
@@ -169,11 +187,15 @@ export default function EducationManager() {
             />
           </div>
 
-          <div className="flex gap-2">
+          <div className="flex gap-3 justify-end pt-4">
+            <button onClick={closeModal} className="btn-outline text-sm" disabled={saving}>
+              <HiXMark className="w-4 h-4" />
+              Cancel
+            </button>
             <button
-              onClick={isAdding ? handleAdd : handleUpdate}
+              onClick={editingId ? handleUpdate : handleAdd}
               className="btn-primary text-sm"
-              disabled={saving}
+              disabled={saving || !formData.degree.trim() || !formData.institution.trim()}
             >
               {saving ? (
                 <>
@@ -183,17 +205,13 @@ export default function EducationManager() {
               ) : (
                 <>
                   <HiCheck className="w-4 h-4" />
-                  {isAdding ? 'Add' : 'Update'}
+                  {editingId ? 'Update' : 'Add'}
                 </>
               )}
             </button>
-            <button onClick={handleCancel} className="btn-outline text-sm" disabled={saving}>
-              <HiXMark className="w-4 h-4" />
-              Cancel
-            </button>
           </div>
         </div>
-      )}
+      </Modal>
 
       {/* Education List */}
       <div className="space-y-4">

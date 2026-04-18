@@ -31,7 +31,19 @@ export default function Contact() {
     e.preventDefault();
     setLoading(true);
     try {
-      const response = await fetch('https://api.web3forms.com/submit', {
+      // Save to our database first
+      const dbResponse = await fetch(`${import.meta.env.VITE_API_URL || 'http://localhost:5000/api'}/contact`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(formData),
+      });
+      
+      if (!dbResponse.ok) {
+        throw new Error('Failed to save message');
+      }
+
+      // Also send via Web3Forms for email notification
+      await fetch('https://api.web3forms.com/submit', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json', Accept: 'application/json' },
         body: JSON.stringify({
@@ -43,15 +55,12 @@ export default function Contact() {
           from_name: 'Muhib Portfolio',
         }),
       });
-      const result = await response.json();
-      if (result.success) {
-        setSubmitted(true);
-        setFormData({ name: '', email: '', subject: '', message: '' });
-      } else {
-        alert('Something went wrong. Please try again or contact me directly via email.');
-      }
-    } catch {
-      alert('Network error. Please check your connection and try again.');
+
+      setSubmitted(true);
+      setFormData({ name: '', email: '', subject: '', message: '' });
+    } catch (error) {
+      console.error('Contact form error:', error);
+      alert('Something went wrong. Please try again or contact me directly via email.');
     } finally {
       setLoading(false);
     }

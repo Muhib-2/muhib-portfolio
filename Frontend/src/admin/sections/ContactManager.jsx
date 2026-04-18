@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
-import { HiPencil, HiCheck, HiXMark, HiEnvelope, HiPhone, HiMapPin } from 'react-icons/hi2';
-import { portfolioAPI } from '../../services/api';
+import { HiPencil, HiCheck, HiXMark, HiEnvelope, HiPhone, HiMapPin, HiTrash, HiEye, HiChatBubbleLeftRight } from 'react-icons/hi2';
+import { portfolioAPI, contactAPI } from '../../services/api';
 
 export default function ContactManager() {
   const [isEditing, setIsEditing] = useState(false);
@@ -13,27 +13,14 @@ export default function ContactManager() {
     availability: '',
   });
 
-  const [messages, setMessages] = useState([
-    {
-      id: 1,
-      name: 'John Doe',
-      email: 'john@example.com',
-      message: 'Hi, I would like to discuss a project with you.',
-      date: '2024-01-15',
-      read: false,
-    },
-    {
-      id: 2,
-      name: 'Jane Smith',
-      email: 'jane@example.com',
-      message: 'Interested in hiring you for a web development project.',
-      date: '2024-01-14',
-      read: true,
-    },
-  ]);
+  const [messages, setMessages] = useState([]);
+  const [messagesLoading, setMessagesLoading] = useState(true);
+  const [selectedMessage, setSelectedMessage] = useState(null);
+  const [replyText, setReplyText] = useState('');
 
   useEffect(() => {
     fetchContactData();
+    fetchMessages();
   }, []);
 
   const fetchContactData = async () => {
@@ -51,6 +38,19 @@ export default function ContactManager() {
       alert('Failed to load contact data');
     } finally {
       setLoading(false);
+    }
+  };
+
+  const fetchMessages = async () => {
+    try {
+      setMessagesLoading(true);
+      const response = await contactAPI.getMessages({ limit: 100 });
+      setMessages(response.data || []);
+    } catch (error) {
+      console.error('Error fetching messages:', error);
+      alert('Failed to load messages');
+    } finally {
+      setMessagesLoading(false);
     }
   };
 
@@ -83,6 +83,63 @@ export default function ContactManager() {
     setIsEditing(false);
   };
 
+  const toggleMessageRead = async (id, currentReadStatus) => {
+    try {
+      await contactAPI.markAsRead(id, !currentReadStatus);
+      setMessages(messages.map(msg => 
+        msg._id === id ? { ...msg, read: !currentReadStatus } : msg
+      ));
+    } catch (error) {
+      console.error('Error updating message:', error);
+      alert('Failed to update message status');
+    }
+  };
+
+  const deleteMessage = async (id) => {
+    if (confirm('Are you sure you want to delete this message?')) {
+      try {
+        await contactAPI.deleteMessage(id);
+        setMessages(messages.filter(msg => msg._id !== id));
+        if (selectedMessage?._id === id) {
+          setSelectedMessage(null);
+        }
+        alert('Message deleted successfully');
+      } catch (error) {
+        console.error('Error deleting message:', error);
+        alert('Failed to delete message');
+      }
+    }
+  };
+
+  const viewMessage = (message) => {
+    setSelectedMessage(message);
+    setReplyText(message.replyMessage || '');
+    if (!message.read) {
+      toggleMessageRead(message._id, false);
+    }
+  };
+
+  const saveReply = async () => {
+    if (!selectedMessage || !replyText.trim()) return;
+    
+    try {
+      await contactAPI.addReply(selectedMessage._id, replyText);
+      setMessages(messages.map(msg => 
+        msg._id === selectedMessage._id 
+          ? { ...msg, replied: true, replyMessage: replyText } 
+          : msg
+      ));
+      alert('Reply saved successfully!');
+      setSelectedMessage(null);
+      setReplyText('');
+    } catch (error) {
+      console.error('Error saving reply:', error);
+      alert('Failed to save reply');
+    }
+  };
+
+  const unreadCount = messages.filter(msg => !msg.read).length;
+
   if (loading) {
     return (
       <div className="flex items-center justify-center py-12">
@@ -90,20 +147,6 @@ export default function ContactManager() {
       </div>
     );
   }
-
-  const toggleMessageRead = (id) => {
-    setMessages(messages.map(msg => 
-      msg.id === id ? { ...msg, read: !msg.read } : msg
-    ));
-  };
-
-  const deleteMessage = (id) => {
-    if (confirm('Are you sure you want to delete this message?')) {
-      setMessages(messages.filter(msg => msg.id !== id));
-    }
-  };
-
-  const unreadCount = messages.filter(msg => !msg.read).length;
 
   return (
     <div>
@@ -208,15 +251,26 @@ export default function ContactManager() {
               </span>
             )}
           </h3>
+          <button 
+            onClick={fetchMessages}
+            className="btn-outline text-sm"
+            disabled={messagesLoading}
+          >
+            {messagesLoading ? 'Loading...' : 'Refresh'}
+          </button>
         </div>
 
-        <div className="space-y-3">
-          {messages.length === 0 ? (
-            <p className="text-center text-slate-500 py-8">No messages yet</p>
-          ) : (
-            messages.map((msg) => (
+        {messagesLoading ? (
+          <div className="flex items-center justify-center py-12">
+            <div className="w-8 h-8 border-4 border-[#00d4ff] border-t-transparent rounded-full animate-spin"></div>
+          </div>
+        ) : messages.length === 0 ? (
+          <p className="text-center text-slate-500 py-8">No messages yet</p>
+        ) : (
+          <div className="space-y-3">
+            {messages.map((msg) => (
               <div
-                key={msg.id}
+                key={msg._id}
                 className={`p-4 rounded-xl border transition-all ${
                   msg.read
                     ? 'bg-white/[0.02] border-white/[0.05]'
@@ -224,14 +278,31 @@ export default function ContactManager() {
                 }`}
               >
                 <div className="flex items-start justify-between mb-2">
-                  <div>
-                    <h4 className="font-semibold text-slate-200">{msg.name}</h4>
+                  <div className="flex-1">
+                    <div className="flex items-center gap-2 mb-1">
+                      <h4 className="font-semibold text-slate-200">{msg.name}</h4>
+                      {msg.replied && (
+                        <span className="text-xs px-2 py-0.5 rounded-full bg-emerald-500/20 text-emerald-400">
+                          Replied
+                        </span>
+                      )}
+                    </div>
                     <p className="text-xs text-slate-500">{msg.email}</p>
+                    <p className="text-sm text-slate-300 font-medium mt-1">{msg.subject}</p>
                   </div>
                   <div className="flex items-center gap-2">
-                    <span className="text-xs text-slate-500">{msg.date}</span>
+                    <span className="text-xs text-slate-500">
+                      {new Date(msg.createdAt).toLocaleDateString()}
+                    </span>
                     <button
-                      onClick={() => toggleMessageRead(msg.id)}
+                      onClick={() => viewMessage(msg)}
+                      className="p-1.5 rounded-lg hover:bg-white/[0.04] text-slate-400 hover:text-[#00d4ff] transition-colors"
+                      title="View message"
+                    >
+                      <HiEye className="w-4 h-4" />
+                    </button>
+                    <button
+                      onClick={() => toggleMessageRead(msg._id, msg.read)}
                       className={`text-xs px-2 py-1 rounded-lg transition-colors ${
                         msg.read
                           ? 'bg-white/[0.04] text-slate-400 hover:text-slate-200'
@@ -241,19 +312,88 @@ export default function ContactManager() {
                       {msg.read ? 'Mark Unread' : 'Mark Read'}
                     </button>
                     <button
-                      onClick={() => deleteMessage(msg.id)}
-                      className="text-xs px-2 py-1 rounded-lg bg-white/[0.04] text-slate-400 hover:text-red-400 transition-colors"
+                      onClick={() => deleteMessage(msg._id)}
+                      className="p-1.5 rounded-lg hover:bg-white/[0.04] text-slate-400 hover:text-red-400 transition-colors"
+                      title="Delete"
                     >
-                      Delete
+                      <HiTrash className="w-4 h-4" />
                     </button>
                   </div>
                 </div>
-                <p className="text-sm text-slate-400">{msg.message}</p>
+                <p className="text-sm text-slate-400 line-clamp-2">{msg.message}</p>
               </div>
-            ))
-          )}
-        </div>
+            ))}
+          </div>
+        )}
       </div>
+
+      {/* Message Detail Modal */}
+      {selectedMessage && (
+        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
+          <div className="glass-card rounded-2xl p-6 max-w-2xl w-full max-h-[90vh] overflow-y-auto">
+            <div className="flex items-start justify-between mb-4">
+              <div>
+                <h3 className="text-xl font-bold text-slate-200">{selectedMessage.subject}</h3>
+                <p className="text-sm text-slate-400 mt-1">
+                  From: {selectedMessage.name} ({selectedMessage.email})
+                </p>
+                <p className="text-xs text-slate-500 mt-1">
+                  {new Date(selectedMessage.createdAt).toLocaleString()}
+                </p>
+              </div>
+              <button
+                onClick={() => setSelectedMessage(null)}
+                className="p-2 rounded-lg hover:bg-white/[0.04] text-slate-400 hover:text-slate-200"
+              >
+                <HiXMark className="w-5 h-5" />
+              </button>
+            </div>
+
+            <div className="bg-white/[0.02] rounded-xl p-4 mb-4">
+              <p className="text-sm text-slate-300 whitespace-pre-wrap">{selectedMessage.message}</p>
+            </div>
+
+            {selectedMessage.replied && selectedMessage.replyMessage && (
+              <div className="bg-emerald-500/10 border border-emerald-500/20 rounded-xl p-4 mb-4">
+                <div className="flex items-center gap-2 mb-2">
+                  <HiChatBubbleLeftRight className="w-4 h-4 text-emerald-400" />
+                  <span className="text-sm font-semibold text-emerald-400">Your Reply</span>
+                </div>
+                <p className="text-sm text-slate-300 whitespace-pre-wrap">{selectedMessage.replyMessage}</p>
+              </div>
+            )}
+
+            <div className="space-y-3">
+              <label className="block text-sm font-medium text-slate-300">
+                {selectedMessage.replied ? 'Update Reply' : 'Add Reply'}
+              </label>
+              <textarea
+                value={replyText}
+                onChange={(e) => setReplyText(e.target.value)}
+                rows={4}
+                className="form-input resize-none"
+                placeholder="Type your reply here..."
+              />
+              <div className="flex gap-2">
+                <button
+                  onClick={saveReply}
+                  className="btn-primary text-sm"
+                  disabled={!replyText.trim()}
+                >
+                  <HiCheck className="w-4 h-4" />
+                  Save Reply
+                </button>
+                <button
+                  onClick={() => setSelectedMessage(null)}
+                  className="btn-outline text-sm"
+                >
+                  Close
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

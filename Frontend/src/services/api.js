@@ -10,7 +10,8 @@ const getAuthToken = () => {
 const handleResponse = async (response) => {
   if (!response.ok) {
     const error = await response.json().catch(() => ({ message: 'Network error' }));
-    throw new Error(error.message || 'Something went wrong');
+    console.error('API Error:', error);
+    throw new Error(error.error || error.message || 'Something went wrong');
   }
   return response.json();
 };
@@ -121,7 +122,137 @@ export const authAPI = {
   }
 };
 
+// ============================================================================
+// CONTACT API
+// ============================================================================
+
+export const contactAPI = {
+  // Submit contact form
+  submitMessage: async (data) => {
+    const response = await fetch(`${API_BASE_URL}/contact`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify(data)
+    });
+    return handleResponse(response);
+  },
+
+  // Get all messages (admin only)
+  getMessages: async (params = {}) => {
+    const queryString = new URLSearchParams(params).toString();
+    const response = await fetch(`${API_BASE_URL}/contact?${queryString}`, {
+      headers: {
+        'Authorization': `Bearer ${getAuthToken()}`
+      }
+    });
+    return handleResponse(response);
+  },
+
+  // Get single message
+  getMessage: async (id) => {
+    const response = await fetch(`${API_BASE_URL}/contact/${id}`, {
+      headers: {
+        'Authorization': `Bearer ${getAuthToken()}`
+      }
+    });
+    return handleResponse(response);
+  },
+
+  // Mark as read/unread
+  markAsRead: async (id, read = true) => {
+    const response = await fetch(`${API_BASE_URL}/contact/${id}/read`, {
+      method: 'PATCH',
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${getAuthToken()}`
+      },
+      body: JSON.stringify({ read })
+    });
+    return handleResponse(response);
+  },
+
+  // Add reply
+  addReply: async (id, replyMessage) => {
+    const response = await fetch(`${API_BASE_URL}/contact/${id}/reply`, {
+      method: 'PATCH',
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${getAuthToken()}`
+      },
+      body: JSON.stringify({ replyMessage })
+    });
+    return handleResponse(response);
+  },
+
+  // Delete message
+  deleteMessage: async (id) => {
+    const response = await fetch(`${API_BASE_URL}/contact/${id}`, {
+      method: 'DELETE',
+      headers: {
+        'Authorization': `Bearer ${getAuthToken()}`
+      }
+    });
+    return handleResponse(response);
+  },
+
+  // Delete multiple messages
+  deleteMessages: async (ids) => {
+    const response = await fetch(`${API_BASE_URL}/contact`, {
+      method: 'DELETE',
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${getAuthToken()}`
+      },
+      body: JSON.stringify({ ids })
+    });
+    return handleResponse(response);
+  }
+};
+
+// ============================================================================
+// UPLOAD API
+// ============================================================================
+
+export const uploadAPI = {
+  // Upload file
+  uploadFile: async (file, type = 'image') => {
+    const formData = new FormData();
+    formData.append('file', file);
+    formData.append('type', type);
+
+    const response = await fetch(`${API_BASE_URL}/upload`, {
+      method: 'POST',
+      headers: {
+        'Authorization': `Bearer ${getAuthToken()}`
+      },
+      body: formData
+    });
+    
+    if (!response.ok) {
+      const error = await response.json().catch(() => ({ message: 'Upload failed' }));
+      throw new Error(error.message || 'Upload failed');
+    }
+    
+    return response.json();
+  },
+
+  // Delete file
+  deleteFile: async (type, filename) => {
+    const response = await fetch(`${API_BASE_URL}/upload/${type}/${filename}`, {
+      method: 'DELETE',
+      headers: {
+        'Authorization': `Bearer ${getAuthToken()}`
+      }
+    });
+    return handleResponse(response);
+  }
+};
+
 export default {
   portfolio: portfolioAPI,
-  auth: authAPI
+  auth: authAPI,
+  contact: contactAPI,
+  upload: uploadAPI
 };

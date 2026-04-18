@@ -1,12 +1,14 @@
 import { useState, useEffect } from 'react';
 import { HiPlus, HiPencil, HiTrash, HiCheck, HiXMark } from 'react-icons/hi2';
-import { portfolioAPI } from '../../services/api';
+import { portfolioAPI, uploadAPI } from '../../services/api';
+import Modal from '../../components/Modal';
+import FileUpload from '../../components/FileUpload';
 
 export default function SkillsManager() {
   const [skills, setSkills] = useState([]);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
-  const [isAdding, setIsAdding] = useState(false);
+  const [showModal, setShowModal] = useState(false);
   const [editingId, setEditingId] = useState(null);
   const [formData, setFormData] = useState({
     name: '',
@@ -15,6 +17,8 @@ export default function SkillsManager() {
     category: 'Frontend',
     color: '#00d4ff',
   });
+
+  const [uploadedIcon, setUploadedIcon] = useState(null);
 
   const categories = [
     { name: 'Frontend', color: '#00d4ff' },
@@ -31,7 +35,6 @@ export default function SkillsManager() {
     try {
       setLoading(true);
       const data = await portfolioAPI.getPortfolio();
-      // Convert backend skills format to frontend format
       const flatSkills = (data.skills || []).flatMap((skillCategory, catIndex) => 
         (skillCategory.items || []).map((item, itemIndex) => ({
           _id: `${catIndex}-${itemIndex}`,
@@ -55,7 +58,6 @@ export default function SkillsManager() {
   const saveSkills = async (updatedSkills) => {
     try {
       setSaving(true);
-      // Convert frontend format back to backend format
       const skillsByCategory = {};
       updatedSkills.forEach(skill => {
         if (!skillsByCategory[skill.category]) {
@@ -80,16 +82,36 @@ export default function SkillsManager() {
     }
   };
 
-  const handleAdd = async () => {
-    const newSkill = {
-      _id: Date.now().toString(),
-      ...formData,
-      categoryColor: categories.find(cat => cat.name === formData.category)?.color || '#00d4ff',
-    };
-    const updatedSkills = [...skills, newSkill];
-    await saveSkills(updatedSkills);
+  const handleIconUpload = async (fileData) => {
+    if (!fileData) {
+      setUploadedIcon(null);
+      setFormData({ ...formData, icon: '' });
+      return;
+    }
+
+    try {
+      const response = await uploadAPI.uploadFile(fileData.file, 'icon');
+      setUploadedIcon(response.data);
+      setFormData({ ...formData, icon: response.data.url });
+    } catch (error) {
+      console.error('Error uploading icon:', error);
+      alert('Failed to upload icon: ' + error.message);
+    }
+  };
+
+  const getImageUrl = (iconPath) => {
+    if (!iconPath) return null;
+    if (iconPath.startsWith('/uploads')) {
+      return `${import.meta.env.VITE_API_URL || 'http://localhost:5000'}${iconPath}`;
+    }
+    return iconPath;
+  };
+
+  const openAddModal = () => {
+    setEditingId(null);
     setFormData({ name: '', icon: '', level: 90, category: 'Frontend', color: '#00d4ff' });
-    setIsAdding(false);
+    setUploadedIcon(null);
+    setShowModal(true);
   };
 
   const handleEdit = (skill) => {
@@ -101,19 +123,44 @@ export default function SkillsManager() {
       category: skill.category,
       color: skill.color,
     });
+    setUploadedIcon(null);
+    setShowModal(true);
+  };
+
+  const handleAdd = async () => {
+    if (saving) return; // Prevent duplicate submissions
+    
+    try {
+      setSaving(true);
+      const newSkill = {
+        ...formData,
+        categoryColor: categories.find(cat => cat.name === formData.category)?.color || '#00d4ff',
+      };
+      const updatedSkills = [...skills, newSkill];
+      await saveSkills(updatedSkills);
+      closeModal();
+    } catch (error) {
+      setSaving(false);
+    }
   };
 
   const handleUpdate = async () => {
-    const updatedSkills = skills.map(skill => 
-      skill._id === editingId ? { 
-        ...skill, 
-        ...formData,
-        categoryColor: categories.find(cat => cat.name === formData.category)?.color || '#00d4ff',
-      } : skill
-    );
-    await saveSkills(updatedSkills);
-    setEditingId(null);
-    setFormData({ name: '', icon: '', level: 90, category: 'Frontend', color: '#00d4ff' });
+    if (saving) return; // Prevent duplicate submissions
+    
+    try {
+      setSaving(true);
+      const updatedSkills = skills.map(skill => 
+        skill._id === editingId ? { 
+          ...skill, 
+          ...formData,
+          categoryColor: categories.find(cat => cat.name === formData.category)?.color || '#00d4ff',
+        } : skill
+      );
+      await saveSkills(updatedSkills);
+      closeModal();
+    } catch (error) {
+      setSaving(false);
+    }
   };
 
   const handleDelete = async (id) => {
@@ -123,10 +170,11 @@ export default function SkillsManager() {
     }
   };
 
-  const handleCancel = () => {
-    setIsAdding(false);
+  const closeModal = () => {
+    setShowModal(false);
     setEditingId(null);
     setFormData({ name: '', icon: '', level: 90, category: 'Frontend', color: '#00d4ff' });
+    setUploadedIcon(null);
   };
 
   if (loading) {
@@ -141,57 +189,53 @@ export default function SkillsManager() {
     <div className="max-w-7xl mx-auto">
       <div className="flex items-center justify-between mb-6">
         <h2 className="text-2xl font-bold font-display text-gradient">Skills</h2>
-        {!isAdding && !editingId && (
-          <button onClick={() => setIsAdding(true)} className="btn-primary text-sm" disabled={saving}>
-            <HiPlus className="w-4 h-4" />
-            Add Skill
-          </button>
-        )}
+        <button onClick={openAddModal} className="btn-primary text-sm" disabled={saving}>
+          <HiPlus className="w-4 h-4" />
+          Add Skill
+        </button>
       </div>
 
-      {/* Add/Edit Form */}
-      {(isAdding || editingId) && (
-        <div className="glass-card p-4 lg:p-6 rounded-2xl mb-6 space-y-4">
-          <h3 className="text-lg font-semibold text-slate-200 mb-4">
-            {isAdding ? 'Add New Skill' : 'Edit Skill'}
-          </h3>
-          
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
-            <div>
-              <label className="block text-sm font-medium text-slate-300 mb-2">Skill Name</label>
-              <input
-                type="text"
-                value={formData.name}
-                onChange={(e) => setFormData({ ...formData, name: e.target.value })}
-                className="form-input"
-                placeholder="e.g., React.js"
-              />
-            </div>
-
-            <div>
-              <label className="block text-sm font-medium text-slate-300 mb-2">Category</label>
-              <select
-                value={formData.category}
-                onChange={(e) => setFormData({ ...formData, category: e.target.value })}
-                className="form-input"
-              >
-                {categories.map(cat => (
-                  <option key={cat.name} value={cat.name}>{cat.name}</option>
-                ))}
-              </select>
-            </div>
+      {/* Modal */}
+      <Modal
+        isOpen={showModal}
+        onClose={closeModal}
+        title={editingId ? 'Edit Skill' : 'Add New Skill'}
+        size="md"
+      >
+        <div className="space-y-4">
+          <div>
+            <label className="block text-sm font-medium text-slate-300 mb-2">Skill Name</label>
+            <input
+              type="text"
+              value={formData.name}
+              onChange={(e) => setFormData({ ...formData, name: e.target.value })}
+              className="form-input"
+              placeholder="e.g., React.js"
+            />
           </div>
 
           <div>
-            <label className="block text-sm font-medium text-slate-300 mb-2">Icon Name (React Icons)</label>
-            <input
-              type="text"
-              value={formData.icon}
-              onChange={(e) => setFormData({ ...formData, icon: e.target.value })}
-              className="form-input"
-              placeholder="e.g., FaReact"
+            <FileUpload
+              label="Skill Icon"
+              accept="image/*"
+              value={getImageUrl(formData.icon)}
+              onChange={handleIconUpload}
+              type="image"
+              placeholder="Upload skill icon (PNG, SVG, JPG)"
             />
-            <p className="text-xs text-slate-500 mt-1">Use React Icons names (e.g., FaReact, SiTailwindcss)</p>
+          </div>
+
+          <div>
+            <label className="block text-sm font-medium text-slate-300 mb-2">Category</label>
+            <select
+              value={formData.category}
+              onChange={(e) => setFormData({ ...formData, category: e.target.value })}
+              className="form-input"
+            >
+              {categories.map(cat => (
+                <option key={cat.name} value={cat.name}>{cat.name}</option>
+              ))}
+            </select>
           </div>
 
           <div>
@@ -211,31 +255,65 @@ export default function SkillsManager() {
             />
           </div>
 
-          <div className="flex gap-2">
-            <button
-              onClick={isAdding ? handleAdd : handleUpdate}
-              className="btn-primary text-sm"
-              disabled={saving}
-            >
-              {saving ? (
-                <>
-                  <div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />
-                  Saving...
-                </>
-              ) : (
-                <>
-                  <HiCheck className="w-4 h-4" />
-                  {isAdding ? 'Add' : 'Update'}
-                </>
-              )}
-            </button>
-            <button onClick={handleCancel} className="btn-outline text-sm" disabled={saving}>
-              <HiXMark className="w-4 h-4" />
-              Cancel
-            </button>
-          </div>
+          {/* Preview */}
+          {formData.name && (
+            <div>
+              <label className="block text-sm font-medium text-slate-300 mb-2">Preview</label>
+              <div className="glass-card p-4 rounded-xl">
+                <div className="flex items-center gap-3 mb-3">
+                  <div 
+                    className="w-10 h-10 rounded-xl flex items-center justify-center text-white text-sm font-bold"
+                    style={{ backgroundColor: categories.find(c => c.name === formData.category)?.color || '#00d4ff' }}
+                  >
+                    {formData.icon ? (
+                      <img src={getImageUrl(formData.icon)} alt={formData.name} className="w-6 h-6 object-contain" />
+                    ) : (
+                      formData.name.slice(0, 2)
+                    )}
+                  </div>
+                  <div>
+                    <h4 className="font-semibold text-slate-200">{formData.name}</h4>
+                    <p className="text-xs text-slate-500">{formData.level}% proficiency</p>
+                  </div>
+                </div>
+                <div className="w-full h-2 bg-white/[0.08] rounded-full overflow-hidden">
+                  <div
+                    className="h-full rounded-full transition-all duration-500"
+                    style={{ 
+                      width: `${formData.level}%`,
+                      backgroundColor: categories.find(c => c.name === formData.category)?.color || '#00d4ff'
+                    }}
+                  />
+                </div>
+              </div>
+            </div>
+          )}
         </div>
-      )}
+
+        <div className="flex gap-3 justify-end mt-6">
+          <button onClick={closeModal} className="btn-outline text-sm" disabled={saving}>
+            <HiXMark className="w-4 h-4" />
+            Cancel
+          </button>
+          <button
+            onClick={editingId ? handleUpdate : handleAdd}
+            className="btn-primary text-sm"
+            disabled={saving || !formData.name.trim()}
+          >
+            {saving ? (
+              <>
+                <div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />
+                Saving...
+              </>
+            ) : (
+              <>
+                <HiCheck className="w-4 h-4" />
+                {editingId ? 'Update Skill' : 'Add Skill'}
+              </>
+            )}
+          </button>
+        </div>
+      </Modal>
 
       {/* Skills by Category */}
       {categories.map(category => {
@@ -262,7 +340,11 @@ export default function SkillsManager() {
                         className="w-10 h-10 rounded-xl flex items-center justify-center text-white text-sm font-bold flex-shrink-0"
                         style={{ backgroundColor: skill.color || category.color }}
                       >
-                        {skill.icon ? skill.icon.slice(0, 2) : skill.name.slice(0, 2)}
+                        {skill.icon ? (
+                          <img src={getImageUrl(skill.icon)} alt={skill.name} className="w-6 h-6 object-contain" />
+                        ) : (
+                          skill.name.slice(0, 2)
+                        )}
                       </div>
                       <div className="min-w-0 flex-1">
                         <h4 className="font-semibold text-slate-200 truncate">{skill.name}</h4>

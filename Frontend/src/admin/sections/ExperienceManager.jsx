@@ -1,12 +1,13 @@
 import { useState, useEffect } from 'react';
 import { HiPlus, HiPencil, HiTrash, HiCheck, HiXMark } from 'react-icons/hi2';
 import { portfolioAPI } from '../../services/api';
+import Modal from '../../components/Modal';
 
 export default function ExperienceManager() {
   const [experience, setExperience] = useState([]);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
-  const [isAdding, setIsAdding] = useState(false);
+  const [showModal, setShowModal] = useState(false);
   const [editingId, setEditingId] = useState(null);
   const [formData, setFormData] = useState({
     title: '',
@@ -47,20 +48,10 @@ export default function ExperienceManager() {
     }
   };
 
-  const handleAdd = async () => {
-    const newExperience = {
-      _id: Date.now().toString(),
-      company: formData.company,
-      position: formData.title,
-      startDate: new Date(),
-      current: false,
-      description: formData.description,
-      technologies: formData.achievements.filter(a => a.trim() !== ''),
-    };
-    const updatedExperience = [...experience, newExperience];
-    await saveExperience(updatedExperience);
+  const openAddModal = () => {
+    setEditingId(null);
     setFormData({ title: '', company: '', period: '', description: '', achievements: [''] });
-    setIsAdding(false);
+    setShowModal(true);
   };
 
   const handleEdit = (item) => {
@@ -72,21 +63,49 @@ export default function ExperienceManager() {
       description: item.description,
       achievements: item.technologies || [''],
     });
+    setShowModal(true);
+  };
+
+  const handleAdd = async () => {
+    if (saving) return; // Prevent duplicate submissions
+    
+    try {
+      setSaving(true);
+      const newExperience = {
+        company: formData.company,
+        position: formData.title,
+        startDate: new Date(),
+        current: false,
+        description: formData.description,
+        technologies: formData.achievements.filter(a => a.trim() !== ''),
+      };
+      const updatedExperience = [...experience, newExperience];
+      await saveExperience(updatedExperience);
+      closeModal();
+    } catch (error) {
+      setSaving(false);
+    }
   };
 
   const handleUpdate = async () => {
-    const updatedExperience = experience.map(item => 
-      item._id === editingId ? { 
-        ...item, 
-        company: formData.company,
-        position: formData.title,
-        description: formData.description,
-        technologies: formData.achievements.filter(a => a.trim() !== ''),
-      } : item
-    );
-    await saveExperience(updatedExperience);
-    setEditingId(null);
-    setFormData({ title: '', company: '', period: '', description: '', achievements: [''] });
+    if (saving) return; // Prevent duplicate submissions
+    
+    try {
+      setSaving(true);
+      const updatedExperience = experience.map(item => 
+        item._id === editingId ? { 
+          ...item, 
+          company: formData.company,
+          position: formData.title,
+          description: formData.description,
+          technologies: formData.achievements.filter(a => a.trim() !== ''),
+        } : item
+      );
+      await saveExperience(updatedExperience);
+      closeModal();
+    } catch (error) {
+      setSaving(false);
+    }
   };
 
   const handleDelete = async (id) => {
@@ -96,8 +115,8 @@ export default function ExperienceManager() {
     }
   };
 
-  const handleCancel = () => {
-    setIsAdding(false);
+  const closeModal = () => {
+    setShowModal(false);
     setEditingId(null);
     setFormData({ title: '', company: '', period: '', description: '', achievements: [''] });
   };
@@ -128,21 +147,20 @@ export default function ExperienceManager() {
     <div>
       <div className="flex items-center justify-between mb-6">
         <h2 className="text-2xl font-bold font-display text-gradient">Experience</h2>
-        {!isAdding && !editingId && (
-          <button onClick={() => setIsAdding(true)} className="btn-primary text-sm" disabled={saving}>
-            <HiPlus className="w-4 h-4" />
-            Add Experience
-          </button>
-        )}
+        <button onClick={openAddModal} className="btn-primary text-sm" disabled={saving}>
+          <HiPlus className="w-4 h-4" />
+          Add Experience
+        </button>
       </div>
 
-      {/* Add/Edit Form */}
-      {(isAdding || editingId) && (
-        <div className="glass-card p-6 rounded-2xl mb-6 space-y-4">
-          <h3 className="text-lg font-semibold text-slate-200 mb-4">
-            {isAdding ? 'Add New Experience' : 'Edit Experience'}
-          </h3>
-          
+      {/* Modal */}
+      <Modal
+        isOpen={showModal}
+        onClose={closeModal}
+        title={editingId ? 'Edit Experience' : 'Add New Experience'}
+        size="lg"
+      >
+        <div className="space-y-4">
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div>
               <label className="block text-sm font-medium text-slate-300 mb-2">Job Title</label>
@@ -220,11 +238,15 @@ export default function ExperienceManager() {
             </div>
           </div>
 
-          <div className="flex gap-2">
+          <div className="flex gap-3 justify-end pt-4">
+            <button onClick={closeModal} className="btn-outline text-sm" disabled={saving}>
+              <HiXMark className="w-4 h-4" />
+              Cancel
+            </button>
             <button
-              onClick={isAdding ? handleAdd : handleUpdate}
+              onClick={editingId ? handleUpdate : handleAdd}
               className="btn-primary text-sm"
-              disabled={saving}
+              disabled={saving || !formData.title.trim() || !formData.company.trim()}
             >
               {saving ? (
                 <>
@@ -234,17 +256,13 @@ export default function ExperienceManager() {
               ) : (
                 <>
                   <HiCheck className="w-4 h-4" />
-                  {isAdding ? 'Add' : 'Update'}
+                  {editingId ? 'Update' : 'Add'}
                 </>
               )}
             </button>
-            <button onClick={handleCancel} className="btn-outline text-sm" disabled={saving}>
-              <HiXMark className="w-4 h-4" />
-              Cancel
-            </button>
           </div>
         </div>
-      )}
+      </Modal>
 
       {/* Experience List */}
       <div className="space-y-4">
