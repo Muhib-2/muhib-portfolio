@@ -14,15 +14,13 @@ import ExperienceManager from './sections/ExperienceManager';
 import ProjectsManager from './sections/ProjectsManager';
 import ContactManager from './sections/ContactManager';
 import ProfileManager from './sections/ProfileManager';
-import TechStackManager from './sections/TechStackManager';
 
 const menuItems = [
   { id: 'overview', label: 'Overview', icon: HiChartBar },
   { id: 'profile', label: 'Profile', icon: HiUserCircle },
   { id: 'about', label: 'About', icon: HiUser },
-  { id: 'techstack', label: 'Tech Stack', icon: HiCpuChip },
+  { id: 'skills', label: 'Skills & Tech Stack', icon: HiCodeBracket },
   { id: 'education', label: 'Education', icon: HiAcademicCap },
-  { id: 'skills', label: 'Skills', icon: HiCodeBracket },
   { id: 'experience', label: 'Experience', icon: HiBriefcase },
   { id: 'projects', label: 'Projects', icon: HiRectangleStack },
   { id: 'contact', label: 'Contact', icon: HiEnvelope },
@@ -37,9 +35,8 @@ export default function Dashboard({ onLogout }) {
     switch (activeSection) {
       case 'profile': return <ProfileManager />;
       case 'about': return <AboutManager />;
-      case 'techstack': return <TechStackManager />;
-      case 'education': return <EducationManager />;
       case 'skills': return <SkillsManager />;
+      case 'education': return <EducationManager />;
       case 'experience': return <ExperienceManager />;
       case 'projects': return <ProjectsManager />;
       case 'contact': return <ContactManager />;
@@ -228,11 +225,11 @@ function Overview({ setActiveSection }) {
             Update Profile
           </button>
           <button 
-            onClick={() => setActiveSection('techstack')}
+            onClick={() => setActiveSection('skills')}
             className="btn-outline justify-center text-sm lg:text-base py-3"
           >
-            <HiCpuChip className="w-4 h-4" />
-            Manage Tech Stack
+            <HiCodeBracket className="w-4 h-4" />
+            Manage Skills
           </button>
           <button 
             onClick={() => setActiveSection('projects')}

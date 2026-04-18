@@ -4,7 +4,6 @@ import { TypeAnimation } from 'react-type-animation';
 import { useEffect, useState } from 'react';
 import { HiArrowDownTray, HiEnvelope } from 'react-icons/hi2';
 import { FaGithub, FaLinkedinIn, FaFacebookF, FaInstagram, FaWhatsapp } from 'react-icons/fa';
-import muhibImg from '../assets/muhib.png';
 import { usePortfolioData } from '../context/PortfolioContext';
 
 const containerVariants = {
@@ -175,7 +174,18 @@ export default function Hero() {
                   Hire Me
                 </button>
               </Link>
-              <a href={portfolioData.cvUrl} download id="hero-download-cv" className="btn-outline">
+              <a 
+                href={portfolioData.cvUrl ? `${import.meta.env.VITE_API_URL || 'http://localhost:5000'}${portfolioData.cvUrl}` : '#'} 
+                download 
+                id="hero-download-cv" 
+                className="btn-outline"
+                onClick={(e) => {
+                  if (!portfolioData.cvUrl) {
+                    e.preventDefault();
+                    alert('CV not available');
+                  }
+                }}
+              >
                 <HiArrowDownTray className="w-4 h-4" />
                 Download CV
               </a>
@@ -193,7 +203,9 @@ export default function Hero() {
               <div className="absolute inset-[-16px] rounded-full bg-gradient-to-br from-[#00d4ff]/20 to-[#7c3aed]/20 blur-xl animate-pulse-slow" />
               <div className="profile-ring" style={{ width: 280, height: 280 }}>
                 <img
-                  src={muhibImg}
+                  src={portfolioData.profile?.profileImage 
+                    ? `${import.meta.env.VITE_API_URL || 'http://localhost:5000'}${portfolioData.profile.profileImage}`
+                    : 'https://via.placeholder.com/280?text=Profile'}
                   alt="Muhib – Full Stack Developer"
                   className="w-full h-full rounded-full object-cover object-top"
                   style={{ width: '272px', height: '272px' }}

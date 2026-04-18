@@ -42,19 +42,36 @@ router.get('/', async (req, res) => {
 // PUT /api/portfolio - Update portfolio data (protected)
 router.put('/', auth, async (req, res) => {
   try {
+    console.log('Updating entire portfolio');
+    console.log('Update data:', JSON.stringify(req.body, null, 2));
+    
     let portfolio = await Portfolio.findOne();
     
     if (!portfolio) {
+      console.log('Creating new portfolio');
       portfolio = new Portfolio(req.body);
     } else {
-      Object.assign(portfolio, req.body);
+      console.log('Updating existing portfolio');
+      // Deep merge to preserve existing data
+      Object.keys(req.body).forEach(key => {
+        if (typeof req.body[key] === 'object' && !Array.isArray(req.body[key]) && req.body[key] !== null) {
+          portfolio[key] = { ...portfolio[key], ...req.body[key] };
+        } else {
+          portfolio[key] = req.body[key];
+        }
+      });
     }
     
     await portfolio.save();
+    console.log('Portfolio updated successfully');
     res.json(portfolio);
   } catch (error) {
     console.error('Error updating portfolio:', error);
-    res.status(500).json({ message: 'Server error' });
+    console.error('Error details:', error.message);
+    res.status(500).json({ 
+      message: 'Server error',
+      error: error.message 
+    });
   }
 });
 
@@ -64,18 +81,38 @@ router.put('/section/:section', auth, async (req, res) => {
     const { section } = req.params;
     const updateData = req.body;
     
+    console.log(`Updating section: ${section}`);
+    console.log('Update data:', JSON.stringify(updateData, null, 2));
+    
     let portfolio = await Portfolio.findOne();
     if (!portfolio) {
+      console.log('Portfolio not found, creating new one');
       return res.status(404).json({ message: 'Portfolio not found' });
+    }
+    
+    // Validate section exists in schema
+    if (!(section in portfolio.toObject())) {
+      console.log(`Invalid section: ${section}`);
+      return res.status(400).json({ message: `Invalid section: ${section}` });
     }
     
     portfolio[section] = updateData;
     await portfolio.save();
     
+    console.log(`Section ${section} updated successfully`);
     res.json(portfolio);
   } catch (error) {
     console.error('Error updating section:', error);
-    res.status(500).json({ message: 'Server error' });
+    console.error('Error details:', error.message);
+    console.error('Error stack:', error.stack);
+    res.status(500).json({ 
+      message: 'Server error', 
+      error: error.message,
+      details: error.errors ? Object.keys(error.errors).map(key => ({
+        field: key,
+        message: error.errors[key].message
+      })) : []
+    });
   }
 });
 

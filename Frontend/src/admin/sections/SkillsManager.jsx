@@ -23,8 +23,7 @@ export default function SkillsManager() {
   const categories = [
     { name: 'Frontend', color: '#00d4ff' },
     { name: 'Backend', color: '#7c3aed' },
-    { name: 'Database', color: '#10b981' },
-    { name: 'Tools', color: '#f59e0b' },
+    { name: 'Tools & Cloud', color: '#10b981' },
   ];
 
   useEffect(() => {
@@ -164,6 +163,7 @@ export default function SkillsManager() {
   };
 
   const handleDelete = async (id) => {
+    if (saving) return; // Prevent duplicate operations
     if (confirm('Are you sure you want to delete this skill?')) {
       const updatedSkills = skills.filter(skill => skill._id !== id);
       await saveSkills(updatedSkills);
@@ -188,7 +188,10 @@ export default function SkillsManager() {
   return (
     <div className="max-w-7xl mx-auto">
       <div className="flex items-center justify-between mb-6">
-        <h2 className="text-2xl font-bold font-display text-gradient">Skills</h2>
+        <div>
+          <h2 className="text-2xl font-bold font-display text-gradient">Skills & Tech Stack</h2>
+          <p className="text-sm text-slate-400 mt-1">Manage all your technical skills and technologies in one place</p>
+        </div>
         <button onClick={openAddModal} className="btn-primary text-sm" disabled={saving}>
           <HiPlus className="w-4 h-4" />
           Add Skill

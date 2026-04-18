@@ -198,6 +198,14 @@ const transformPortfolioData = (dbData) => {
     heroDescription: dbData.profile?.bio || FALLBACK_DATA.heroDescription,
     cvUrl: dbData.profile?.resume || FALLBACK_DATA.cvUrl,
 
+    // Profile
+    profile: {
+      name: dbData.profile?.name || FALLBACK_DATA.name,
+      title: dbData.profile?.title || FALLBACK_DATA.role,
+      profileImage: dbData.profile?.profileImage || null,
+      email: dbData.profile?.email || FALLBACK_DATA.contact.email,
+    },
+
     // About
     about: {
       introHeading: dbData.profile?.title || FALLBACK_DATA.about.introHeading,
@@ -223,17 +231,30 @@ const transformPortfolioData = (dbData) => {
     },
 
     // Skills - Transform from database format
-    skillCategories: dbData.skills?.map(skillCategory => ({
-      name: skillCategory.category,
-      color: FALLBACK_DATA.skillCategories.find(c => c.name === skillCategory.category)?.color || '#00d4ff',
-      emoji: FALLBACK_DATA.skillCategories.find(c => c.name === skillCategory.category)?.emoji || '🎨',
-      skills: skillCategory.items?.map(item => ({
-        name: item,
-        level: 80, // Default level
-        icon: 'FaCode',
-        color: '#00d4ff'
-      })) || []
-    })) || FALLBACK_DATA.skillCategories,
+    skillCategories: dbData.skills?.length > 0 ? dbData.skills.map(skillCategory => {
+      // Map category names to colors and emojis
+      const categoryConfig = {
+        'Frontend': { color: '#00d4ff', emoji: '🎨' },
+        'Backend': { color: '#7c3aed', emoji: '⚙️' },
+        'Tools & Cloud': { color: '#10b981', emoji: '🛠️' },
+        'Database': { color: '#10b981', emoji: '🗄️' },
+        'Tools': { color: '#10b981', emoji: '🛠️' },
+      };
+      
+      const config = categoryConfig[skillCategory.category] || { color: '#00d4ff', emoji: '🎨' };
+      
+      return {
+        name: skillCategory.category,
+        color: config.color,
+        emoji: config.emoji,
+        skills: skillCategory.items?.map(item => ({
+          name: item,
+          level: 85, // Default level
+          icon: 'FaCode',
+          color: config.color
+        })) || []
+      };
+    }) : FALLBACK_DATA.skillCategories,
 
     // Projects - Transform from database format
     projects: dbData.projects?.map((project, index) => ({

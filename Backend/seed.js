@@ -21,8 +21,8 @@ const samplePortfolio = {
     email: 'muhib@example.com',
     phone: '+1234567890',
     location: 'New York, USA',
-    profileImage: '/assets/muhib.png',
-    resume: '/assets/resume.pdf'
+    profileImage: null, // Will be uploaded via admin panel
+    resume: null // Will be uploaded via admin panel
   },
   
   about: {
@@ -38,27 +38,16 @@ const samplePortfolio = {
   skills: [
     {
       category: 'Frontend',
-      items: ['React', 'JavaScript', 'TypeScript', 'HTML5', 'CSS3', 'Tailwind CSS', 'Redux']
+      items: ['React', 'Next.js', 'TypeScript', 'JavaScript', 'HTML5', 'CSS3', 'Tailwind CSS', 'Framer Motion']
     },
     {
       category: 'Backend',
-      items: ['Node.js', 'Express.js', 'MongoDB', 'PostgreSQL', 'REST APIs', 'GraphQL']
+      items: ['Python', 'Django', 'Node.js', 'REST API']
     },
     {
-      category: 'Tools & Others',
-      items: ['Git', 'Docker', 'AWS', 'Jest', 'Webpack', 'Vite']
+      category: 'Tools & Cloud',
+      items: ['Git', 'VS Code', 'Figma', 'PostgreSQL', 'Vercel']
     }
-  ],
-  
-  techStack: [
-    { name: 'React', icon: 'FaReact', category: 'Frontend' },
-    { name: 'Node.js', icon: 'FaNodeJs', category: 'Backend' },
-    { name: 'MongoDB', icon: 'SiMongodb', category: 'Database' },
-    { name: 'JavaScript', icon: 'FaJs', category: 'Language' },
-    { name: 'TypeScript', icon: 'SiTypescript', category: 'Language' },
-    { name: 'Tailwind CSS', icon: 'SiTailwindcss', category: 'Frontend' },
-    { name: 'Express.js', icon: 'SiExpress', category: 'Backend' },
-    { name: 'Git', icon: 'FaGitAlt', category: 'Tools' }
   ],
   
   education: [
@@ -105,7 +94,7 @@ const samplePortfolio = {
     {
       title: 'CraftHub - Artisan Marketplace',
       description: 'A full-featured e-commerce platform connecting artisans with customers. Features include user authentication, product management, shopping cart, and payment integration.',
-      image: '/assets/projects/crafthub.png',
+      image: 'crafthub.png',
       technologies: ['React', 'Node.js', 'MongoDB', 'Stripe', 'Tailwind CSS'],
       liveUrl: 'https://crafthub-demo.com',
       githubUrl: 'https://github.com/muhib/crafthub',
@@ -114,7 +103,7 @@ const samplePortfolio = {
     {
       title: 'ProEx - Project Management Tool',
       description: 'Collaborative project management application with real-time updates, task tracking, and team communication features.',
-      image: '/assets/projects/proex.png',
+      image: 'proex.png',
       technologies: ['React', 'Express.js', 'Socket.io', 'PostgreSQL', 'Redux'],
       liveUrl: 'https://proex-demo.com',
       githubUrl: 'https://github.com/muhib/proex',
@@ -123,7 +112,7 @@ const samplePortfolio = {
     {
       title: 'Portfolio Website',
       description: 'Personal portfolio website with admin dashboard for content management. Built with modern technologies and best practices.',
-      image: '/assets/projects/muhib-portfolio.png',
+      image: 'muhib-portfolio.png',
       technologies: ['React', 'Node.js', 'MongoDB', 'Tailwind CSS', 'Vite'],
       liveUrl: 'https://muhib-portfolio.com',
       githubUrl: 'https://github.com/muhib/portfolio',

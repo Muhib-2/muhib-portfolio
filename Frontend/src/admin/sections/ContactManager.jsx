@@ -55,6 +55,8 @@ export default function ContactManager() {
   };
 
   const handleSave = async () => {
+    if (saving) return; // Prevent duplicate submissions
+    
     try {
       setSaving(true);
       const updateData = {

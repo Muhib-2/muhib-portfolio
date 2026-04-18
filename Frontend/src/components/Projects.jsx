@@ -5,15 +5,14 @@ import { FaGithub } from 'react-icons/fa';
 import { HiArrowTopRightOnSquare } from 'react-icons/hi2';
 import { usePortfolioData } from '../context/PortfolioContext';
 
-// Import project images
-import muhibPortfolioImg from '../assets/projects/muhib-portfolio.png';
-import proexImg from '../assets/projects/proex.png';
-import crafthubImg from '../assets/projects/crafthub.png';
-
-const projectImages = {
-  'muhib-portfolio.png': muhibPortfolioImg,
-  'proex.png': proexImg,
-  'crafthub.png': crafthubImg,
+// Helper function to get image URL
+const getImageUrl = (imagePath) => {
+  if (!imagePath) return null;
+  if (imagePath.startsWith('http')) return imagePath;
+  if (imagePath.startsWith('/uploads')) {
+    return `${import.meta.env.VITE_API_URL || 'http://localhost:5000'}${imagePath}`;
+  }
+  return imagePath;
 };
 
 function ProjectSlideshow({ images, title, hovered }) {
@@ -27,12 +26,14 @@ function ProjectSlideshow({ images, title, hovered }) {
     return () => clearInterval(timer);
   }, [images.length]);
 
+  const currentImageUrl = getImageUrl(images[currentIndex]);
+
   return (
     <div className="relative w-full h-full overflow-hidden">
       <AnimatePresence mode="wait">
         <motion.img
           key={currentIndex}
-          src={projectImages[images[currentIndex]]}
+          src={currentImageUrl || 'https://via.placeholder.com/600x400?text=Project'}
           alt={`${title} - slide ${currentIndex + 1}`}
           className="absolute inset-0 w-full h-full object-cover object-top"
           initial={{ opacity: 0, scale: 1.1 }}
@@ -119,7 +120,7 @@ function ProjectTitle({ title, accentColor }) {
 
 function ProjectCard({ project, index }) {
   const [hovered, setHovered] = useState(false);
-  const imageSrc = project.image ? projectImages[project.image] : null;
+  const imageSrc = project.image ? getImageUrl(project.image) : null;
 
   return (
     <motion.div

@@ -109,6 +109,7 @@ export default function ExperienceManager() {
   };
 
   const handleDelete = async (id) => {
+    if (saving) return; // Prevent duplicate operations
     if (confirm('Are you sure you want to delete this experience?')) {
       const updatedExperience = experience.filter(item => item._id !== id);
       await saveExperience(updatedExperience);

@@ -12,6 +12,8 @@ export default function Login({ onLogin }) {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
+    if (isLoading) return; // Prevent duplicate submissions
+    
     setError('');
     setIsLoading(true);
 

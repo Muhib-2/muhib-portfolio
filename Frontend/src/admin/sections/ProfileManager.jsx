@@ -167,9 +167,17 @@ export default function ProfileManager() {
 
   const getFileUrl = (url) => {
     if (!url) return null;
+    
+    // If it's already a full URL (Cloudinary or external), return as is
+    if (url.startsWith('http://') || url.startsWith('https://')) {
+      return url;
+    }
+    
+    // Legacy local uploads - convert to backend URL
     if (url.startsWith('/uploads')) {
       return `${import.meta.env.VITE_API_URL || 'http://localhost:5000'}${url}`;
     }
+    
     return url;
   };
 
@@ -267,11 +275,11 @@ export default function ProfileManager() {
             
             <FileUpload
               label="CV/Resume"
-              accept=".pdf,.doc,.docx"
+              accept=".pdf,.doc,.docx,.odt,.rtf,.txt"
               value={getFileUrl(formData.cvUrl)}
               onChange={(fileData) => handleFileUpload(fileData, 'cv')}
               type="document"
-              placeholder="Upload your CV or resume"
+              placeholder="Upload your CV or resume (PDF, Word, ODT, RTF, TXT)"
             />
           </div>
 

@@ -125,6 +125,7 @@ export default function TechStackManager() {
   };
 
   const handleDeleteTech = async (techId) => {
+    if (saving) return; // Prevent duplicate operations
     if (confirm('Are you sure you want to delete this technology?')) {
       const updatedTechStack = techStack.filter(tech => tech._id !== techId);
       await saveTechStack(updatedTechStack);

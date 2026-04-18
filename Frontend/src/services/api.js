@@ -11,6 +11,19 @@ const handleResponse = async (response) => {
   if (!response.ok) {
     const error = await response.json().catch(() => ({ message: 'Network error' }));
     console.error('API Error:', error);
+    
+    // If unauthorized, clear token and prompt re-login
+    if (response.status === 401) {
+      localStorage.removeItem('admin_token');
+      localStorage.removeItem('admin_user');
+      sessionStorage.removeItem('admin_authenticated');
+      
+      // Redirect to login if on admin page
+      if (window.location.pathname.startsWith('/admin')) {
+        window.location.href = '/admin';
+      }
+    }
+    
     throw new Error(error.error || error.message || 'Something went wrong');
   }
   return response.json();
@@ -218,6 +231,12 @@ export const contactAPI = {
 export const uploadAPI = {
   // Upload file
   uploadFile: async (file, type = 'image') => {
+    const token = getAuthToken();
+    
+    if (!token) {
+      throw new Error('No authentication token found. Please login again.');
+    }
+
     const formData = new FormData();
     formData.append('file', file);
     formData.append('type', type);
@@ -225,13 +244,22 @@ export const uploadAPI = {
     const response = await fetch(`${API_BASE_URL}/upload`, {
       method: 'POST',
       headers: {
-        'Authorization': `Bearer ${getAuthToken()}`
+        'Authorization': `Bearer ${token}`
       },
       body: formData
     });
     
     if (!response.ok) {
       const error = await response.json().catch(() => ({ message: 'Upload failed' }));
+      
+      // If unauthorized, clear token and prompt re-login
+      if (response.status === 401) {
+        localStorage.removeItem('admin_token');
+        localStorage.removeItem('admin_user');
+        sessionStorage.removeItem('admin_authenticated');
+        throw new Error('Session expired. Please login again.');
+      }
+      
       throw new Error(error.message || 'Upload failed');
     }
     

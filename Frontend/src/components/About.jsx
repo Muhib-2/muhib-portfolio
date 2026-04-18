@@ -1,7 +1,6 @@
 import { motion } from 'framer-motion';
 import { useInView } from 'framer-motion';
 import { useRef } from 'react';
-import muhibImg from '../assets/muhib.png';
 import { HiCheckBadge } from 'react-icons/hi2';
 import { Link } from 'react-scroll';
 import { usePortfolioData } from '../context/PortfolioContext';
@@ -66,7 +65,9 @@ export default function About() {
                 {/* Inner Image Mask */}
                 <div className="relative rounded-[calc(1.5rem-2px)] overflow-hidden bg-[#111118] h-full w-full z-10">
                   <img
-                    src={muhibImg}
+                    src={portfolioData.profile?.profileImage 
+                      ? `${import.meta.env.VITE_API_URL || 'http://localhost:5000'}${portfolioData.profile.profileImage}`
+                      : 'https://via.placeholder.com/360x400?text=Profile'}
                     alt="Muhib – About"
                     className="w-full h-auto object-cover object-top opacity-90 group-hover:opacity-100 transition-opacity duration-500 group-hover:scale-[1.02]"
                     style={{ minHeight: '400px', objectPosition: 'top center' }}

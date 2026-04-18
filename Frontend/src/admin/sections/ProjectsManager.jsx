@@ -4,17 +4,6 @@ import { portfolioAPI, uploadAPI } from '../../services/api';
 import Modal from '../../components/Modal';
 import FileUpload from '../../components/FileUpload';
 
-// Import project images
-import muhibPortfolioImg from '../../assets/projects/muhib-portfolio.png';
-import proexImg from '../../assets/projects/proex.png';
-import crafthubImg from '../../assets/projects/crafthub.png';
-
-const projectImages = {
-  'muhib-portfolio.png': muhibPortfolioImg,
-  'proex.png': proexImg,
-  'crafthub.png': crafthubImg,
-};
-
 // Helper function to get image URL
 const getImageUrl = (imagePath) => {
   if (!imagePath) return null;
@@ -188,6 +177,7 @@ export default function ProjectsManager() {
   };
 
   const handleDelete = async (id) => {
+    if (saving) return; // Prevent duplicate operations
     if (confirm('Are you sure you want to delete this project?')) {
       const updatedProjects = projects.filter(project => project._id !== id);
       await saveProjects(updatedProjects);

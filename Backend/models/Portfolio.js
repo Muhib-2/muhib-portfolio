@@ -2,10 +2,10 @@ const mongoose = require('mongoose');
 
 const portfolioSchema = new mongoose.Schema({
   profile: {
-    name: { type: String, required: true },
-    title: { type: String, required: true },
-    bio: { type: String, required: true },
-    email: { type: String, required: true },
+    name: { type: String, required: false },
+    title: { type: String, required: false },
+    bio: { type: String, required: false },
+    email: { type: String, required: false },
     phone: String,
     location: String,
     profileImage: String,
@@ -13,24 +13,18 @@ const portfolioSchema = new mongoose.Schema({
   },
   
   about: {
-    description: { type: String, required: true },
+    description: { type: String, required: false },
     highlights: [String]
   },
   
   skills: [{
-    category: { type: String, required: true },
+    category: { type: String, required: false },
     items: [String]
   }],
   
-  techStack: [{
-    name: { type: String, required: true },
-    icon: String,
-    category: String
-  }],
-  
   education: [{
-    institution: { type: String, required: true },
-    degree: { type: String, required: true },
+    institution: { type: String, required: false },
+    degree: { type: String, required: false },
     field: String,
     startDate: Date,
     endDate: Date,
@@ -39,9 +33,9 @@ const portfolioSchema = new mongoose.Schema({
   }],
   
   experience: [{
-    company: { type: String, required: true },
-    position: { type: String, required: true },
-    startDate: { type: Date, required: true },
+    company: { type: String, required: false },
+    position: { type: String, required: false },
+    startDate: { type: Date, required: false },
     endDate: Date,
     current: { type: Boolean, default: false },
     description: String,
@@ -49,8 +43,8 @@ const portfolioSchema = new mongoose.Schema({
   }],
   
   projects: [{
-    title: { type: String, required: true },
-    description: { type: String, required: true },
+    title: { type: String, required: false },
+    description: { type: String, required: false },
     image: String,
     technologies: [String],
     liveUrl: String,
@@ -59,7 +53,7 @@ const portfolioSchema = new mongoose.Schema({
   }],
   
   contact: {
-    email: { type: String, required: true },
+    email: { type: String, required: false },
     phone: String,
     social: {
       linkedin: String,

@@ -105,6 +105,7 @@ export default function EducationManager() {
   };
 
   const handleDelete = async (id) => {
+    if (saving) return; // Prevent duplicate operations
     if (confirm('Are you sure you want to delete this education entry?')) {
       const updatedEducation = education.filter(item => item._id !== id);
       await saveEducation(updatedEducation);

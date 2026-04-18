@@ -10,9 +10,13 @@ app.use(cors());
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
+// Note: Removed static file serving - now using Cloudinary for all uploads
+
 // Routes
 app.use('/api/portfolio', require('./routes/portfolio'));
 app.use('/api/auth', require('./routes/auth'));
+app.use('/api/contact', require('./routes/contact'));
+app.use('/api/upload', require('./routes/upload'));
 
 // Basic route
 app.get('/', (req, res) => {

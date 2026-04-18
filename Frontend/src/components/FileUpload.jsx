@@ -47,9 +47,21 @@ export default function FileUpload({
       return;
     }
     
-    if (type === "document" && !file.type.includes('pdf') && !file.type.includes('document')) {
-      alert('Please select a PDF or document file');
-      return;
+    if (type === "document") {
+      const validDocTypes = [
+        'application/pdf',
+        'application/msword',
+        'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
+        'application/vnd.oasis.opendocument.text',
+        'application/rtf',
+        'text/plain',
+        'text/rtf'
+      ];
+      
+      if (!validDocTypes.includes(file.type) && !file.name.match(/\.(pdf|doc|docx|odt|rtf|txt)$/i)) {
+        alert('Please select a valid document file (PDF, Word, ODT, RTF, or TXT)');
+        return;
+      }
     }
 
     // Create preview URL
@@ -157,7 +169,7 @@ export default function FileUpload({
             <Icon className="w-12 h-12 text-slate-500 mx-auto mb-3" />
             <p className="text-sm text-slate-400 mb-1">{placeholder}</p>
             <p className="text-xs text-slate-500">
-              {type === 'image' ? 'PNG, JPG, GIF up to 10MB' : 'PDF, DOC up to 10MB'}
+              {type === 'image' ? 'PNG, JPG, GIF, SVG up to 10MB' : 'PDF, Word, ODT, RTF, TXT up to 10MB'}
             </p>
           </div>
         )}
