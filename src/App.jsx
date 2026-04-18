@@ -1,3 +1,4 @@
+import { BrowserRouter as Router, Routes, Route, useLocation } from 'react-router-dom';
 import Navbar from './components/Navbar';
 import Hero from './components/Hero';
 import About from './components/About';
@@ -5,13 +6,14 @@ import Skills from './components/Skills';
 import Projects from './components/Projects';
 import Contact from './components/Contact';
 import Footer from './components/Footer';
+import AdminApp from './admin/AdminApp';
 import { Analytics } from '@vercel/analytics/react';
 
 const SectionDivider = () => (
   <div className="w-full h-px bg-gradient-to-r from-transparent via-[#00d4ff]/20 to-transparent" />
 );
 
-export default function App() {
+function Portfolio() {
   return (
     <div className="min-h-screen bg-[#0a0a0f] text-slate-100">
       <Navbar />
@@ -29,5 +31,28 @@ export default function App() {
       <Footer />
       <Analytics />
     </div>
+  );
+}
+
+function AppContent() {
+  const location = useLocation();
+  const isAdminRoute = location.pathname.startsWith('/admin');
+
+  return (
+    <>
+      <Routes>
+        <Route path="/" element={<Portfolio />} />
+        <Route path="/admin/*" element={<AdminApp />} />
+      </Routes>
+      {!isAdminRoute && <Analytics />}
+    </>
+  );
+}
+
+export default function App() {
+  return (
+    <Router>
+      <AppContent />
+    </Router>
   );
 }

@@ -1,8 +1,9 @@
 import { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Link } from 'react-scroll';
+import { Link as RouterLink } from 'react-router-dom';
 import { HiMenuAlt3, HiX } from 'react-icons/hi';
-import { HiArrowDownTray } from 'react-icons/hi2';
+import { HiArrowDownTray, HiCog6Tooth } from 'react-icons/hi2';
 import { PORTFOLIO_DATA } from '../context/PortfolioContext';
 
 const navLinks = [
@@ -85,6 +86,13 @@ export default function Navbar() {
               transition={{ delay: 0.5 }}
               className="hidden md:flex items-center gap-3"
             >
+              <RouterLink
+                to="/admin"
+                className="p-2.5 rounded-xl glass-card text-slate-400 hover:text-[#00d4ff] hover:border-[#00d4ff]/30 hover:shadow-[0_0_15px_rgba(0,212,255,0.2)] transition-all duration-300"
+                title="Admin Panel"
+              >
+                <HiCog6Tooth className="w-4 h-4" />
+              </RouterLink>
               <a
                 href={PORTFOLIO_DATA.cvUrl}
                 download
@@ -145,8 +153,16 @@ export default function Navbar() {
                 initial={{ opacity: 0 }}
                 animate={{ opacity: 1 }}
                 transition={{ delay: 0.3 }}
-                className="pt-2 border-t border-white/[0.06]"
+                className="pt-2 border-t border-white/[0.06] space-y-3"
               >
+                <RouterLink
+                  to="/admin"
+                  className="btn-outline w-full justify-center"
+                  onClick={() => setMenuOpen(false)}
+                >
+                  <HiCog6Tooth className="w-4 h-4" />
+                  Admin Panel
+                </RouterLink>
                 <a href={PORTFOLIO_DATA.cvUrl} download id="mobile-download-cv" className="btn-primary w-full justify-center">
                   <HiArrowDownTray className="w-4 h-4" />
                   Download CV
